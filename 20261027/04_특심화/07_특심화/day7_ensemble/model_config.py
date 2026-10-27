@@ -43,6 +43,25 @@ def new_regressor(name: str):
             device='cpu', random_state=42, n_jobs=1)
     raise ValueError(f'알 수 없는 회귀 모델: {name}')
 
+
+
+# 학습 데이터 내부에서 5-fold 교차검증용 위치 인덱스 생성
+# - 분류: StratifiedKFold로 각 fold의 클래스 비율을 전체와 비슷하게 유지
+#         클래스 구성 차이에 따른 검증 결과의 변동을 줄이기 위함
+# - 회귀: KFold로 정답값의 분포를 고려하지 않고 행을 분할
+# - 공통: 행을 섞되 random_state=42로 분할 결과의 재현성 확보
+#
+# 반환값: (학습용 위치 배열, 검증용 위치 배열) 튜플 5개를 담은 리스트
+# 위치 인덱스는 request_id가 아니며, X.iloc[...] 및 y.iloc[...]에 사용
+#
+# 반환 예시: 데이터 10개를 가정한 설명용 예시이며 실제 실행 결과와 다를 수 있음
+# [
+#     (array([1, 2, 3, 4, 6, 7, 8, 9]), array([0, 5])),
+#     (array([0, 2, 3, 4, 5, 7, 8, 9]), array([1, 6])),
+#     (array([0, 1, 3, 4, 5, 6, 8, 9]), array([2, 7])),
+#     (array([0, 1, 2, 4, 5, 6, 7, 9]), array([3, 8])),
+#     (array([0, 1, 2, 3, 5, 6, 7, 8]), array([4, 9]))
+# ]
 def make_folds(X, y, task='classification'):
     """train 내부 위치 인덱스. 위치를 request_id와 혼동하지 않습니다."""
     if not X.index.equals(y.index):
@@ -58,12 +77,15 @@ def make_folds(X, y, task='classification'):
         return list(KFold(5, shuffle=True, random_state=42).split(X))
     raise ValueError(task)
 
+
+# 교차 검증의 각 fold에서 어떤 데이터가 학습과 평가에 쓰였는지 기록하는 표를 생성
 def fold_table(X, folds, task='classification'):
     """누가 어디에 속했는지 남기는 감사용 표. 점수는 이 함수에서 계산하지 않습니다."""
     rows=[]
     for i,(a,b) in enumerate(folds,1):
         if set(a)&set(b): raise ValueError('fold 학습/평가 중복')
-        for role,positions in [('fit',a),('evaluate',b)]:
+        
+        for role,positions in [('fit',a),('evaluate',b)]:   # a: 현재 fold의 학습 데이터 위치 / b: 현재 fold의 검증 데이터 위치
             for p in positions:
                 rows.append({'task':task,'fold':i,'role':role,
                              'position_in_train':int(p),'request_id':X.index[p]})

@@ -19,7 +19,7 @@ from sklearn.metrics import f1_score
 
 for depth in [1, 3]:
     # TODO B02: 반복 중인 depth를 max_depth에 연결하세요.
-    model = DecisionTreeClassifier(max_depth=1, random_state=42)
+    model = DecisionTreeClassifier(max_depth=depth, random_state=42)
     # TODO 끝
     model.fit(X_train, y_train)
     train_f1 = f1_score(y_train, model.predict(X_train), zero_division=0)

@@ -5,8 +5,8 @@ X = [[100], [200], [300], [700], [800], [900]]
 y = [100, 120, 140, 700, 720, 740]
 model = DecisionTreeRegressor(max_depth=1, random_state=42)
 # TODO A01: 회귀 트리를 학습하고 세 입력을 예측하세요.
-pass
-prediction = None
+model.fit(X, y)
+prediction = model.predict([[0], [250], [850], [1200], [2000]])
 # TODO 끝
 print("분기 기준:", model.tree_.threshold[0])
 print("250·850·1200 예측:", prediction.tolist())

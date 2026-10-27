@@ -28,17 +28,19 @@ FEATURES = NUM + CAT
 FORBIDDEN = {'request_id', 'failed', 'elapsed_ms', 'retry_count', 'status'}
 K_CANDIDATES = [1, 3, 5, 9, 15]
 
+
+# @dataclass: 데이터를 담는 클래스를 간편하게 만들도록 도와주는 데코레이터. 생성자 같은 기본 메서드를 자동으로 만들어 줍니다.
 @dataclass
 class DevData:
-    X_train: pd.DataFrame
-    X_valid: pd.DataFrame
-    yc_train: pd.Series
-    yc_valid: pd.Series
-    yr_train: pd.Series
-    yr_valid: pd.Series
-    test_ids: list
-    manifest: pd.DataFrame
-    source_hashes: dict
+    X_train: pd.DataFrame       # 학습 데이터
+    X_valid: pd.DataFrame       # 검증 데이터
+    yc_train: pd.Series         # 학습 분류 정답
+    yc_valid: pd.Series         # 검증 분류 정답
+    yr_train: pd.Series         # 학습 회귀 정답
+    yr_valid: pd.Series         # 검증 회귀 정답
+    test_ids: list              # test 요청 ID 목록
+    manifest: pd.DataFrame      # 분할표
+    source_hashes: dict         # 파일별 해시값
 
 def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -88,10 +90,14 @@ def load_data(data_dir=None):
     split_manifest는 Day5의 원본 그대로, split_order는 같은 ID의 원래 순서를 보존합니다.
     회귀와 분류 정답을 같은 ID로 선택합니다. 새 train_test_split을 호출하지 않습니다.
     """
+
+    # data/ 디렉토리 내의 csv 파일들 불러오기
     d=Path(data_dir) if data_dir is not None else DATA
-    raw=read_table(d/'requests.csv').set_index('request_id')
+    raw=read_table(d/'requests.csv').set_index('request_id')    # 'request_id' 를 인덱스로 지정
     manifest=read_table(d/'split_manifest.csv')
     order=read_table(d/'split_order.csv')
+
+    # 데이터 검증과 분할별 ID 목록 구성
     if raw.index.has_duplicates or raw.index.isna().any():
         raise ValueError('원본 request_id 중복 또는 결측')
     if manifest['request_id'].duplicated().any() or order['request_id'].duplicated().any():
@@ -100,20 +106,32 @@ def load_data(data_dir=None):
         raise ValueError('원본·분할표·순서표의 ID 합집합이 다릅니다.')
     if set(manifest['split']) != {'train','valid','test'}:
         raise ValueError('분할 이름은 train/valid/test이어야 합니다.')
+    
     m=manifest.set_index('request_id')['split']
     if not order.set_index('request_id')['split'].sort_index().equals(m.sort_index()):
         raise ValueError('split_order와 split_manifest의 소속이 다릅니다.')
+    
     parts={}
     for name in ['train','valid','test']:
         p=order.loc[order['split']==name].sort_values('position',kind='stable')
         if p.empty or p['position'].tolist() != list(range(len(p))):
             raise ValueError(f'{name}: position은 0부터 시작하는 연속 정수여야 합니다.')
         parts[name]=p['request_id'].tolist()
+
+    # parts 출력형태 {
+    #   'train': ['R009', 'R026', 'R074', 'R067', 'R005', ...],  # 60개
+    #   'valid': ['R094', 'R044', 'R073', 'R087', 'R051', ...],  # 20개
+    #   'test':  ['R024', 'R060', 'R031', 'R017', 'R003', ...]   # 20개
+    #}
     # 고정 수업 자료의 입력·레이블 검사도 train/valid에만 적용합니다.
     Xs={}; ycs={}; yrs={}
     for name in ['train','valid']:
-        part=raw.loc[parts[name]]
+        part=raw.loc[parts[name]]   # 원본데이터에서 train/valid 로 분할된 데이터만 각각 가져옴
+
+        # train/valid 입력 특성 검증 및 열의 자료형 변환 (train은 열 전체 결측도 검사)
         Xs[name]=check_features(part.loc[:,FEATURES],training=(name=='train'))
+
+        # 분류·회귀 정답을 숫자로 변환하고, 변환할 수 없는 값이 있는지 검사
         yc=pd.to_numeric(part['failed'],errors='raise')
         yr=pd.to_numeric(part['elapsed_ms'],errors='raise')
         if yc.isna().any() or not yc.isin([0,1]).all():
@@ -121,9 +139,20 @@ def load_data(data_dir=None):
         if yr.isna().any() or not np.isfinite(yr).all() or (yr<0).any():
             raise ValueError(f'{name}: elapsed_ms는 결측 없는 유한한 비음수여야 합니다.')
         ycs[name]=yc.astype(int); yrs[name]=yr.astype(float)
+
+        # 입력 X와 분류·회귀 정답 y의 요청ID 및 행 순서 일치 여부 검증
         if not (Xs[name].index.equals(ycs[name].index) and Xs[name].index.equals(yrs[name].index)):
             raise ValueError('X와 두 y의 ID/순서 불일치')
+
+    # 파일 3개의 해시값을 계산해서 딕셔너리로 만드는 코드
+    # hashes 출력형태 {
+    #   'requests.csv': 'a81f...',
+    #   'split_manifest.csv': 'b32c...',
+    #   'split_order.csv': 'c94d...'
+    # }  
     hashes={n:sha256(d/n) for n in ['requests.csv','split_manifest.csv','split_order.csv']}
+
+    # DevData 객체로 묶어서 반환
     return DevData(Xs['train'],Xs['valid'],ycs['train'],ycs['valid'],
                    yrs['train'],yrs['valid'],parts['test'],manifest,hashes)
 

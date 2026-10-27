@@ -36,7 +36,7 @@ from sklearn.metrics import f1_score
 rows = []
 for depth in [1, 2, 3, 5, None]:
     # TODO A02: depth를 실제 트리 깊이로 적용하세요.
-    estimator = DecisionTreeClassifier(max_depth=1, min_samples_leaf=1, random_state=42)
+    estimator = DecisionTreeClassifier(max_depth=depth, min_samples_leaf=1, random_state=42)
     # TODO 끝
     model = Pipeline([("pre", clone(pre)), ("model", estimator)])
     model.fit(X_train, y_train)
@@ -45,4 +45,8 @@ for depth in [1, 2, 3, 5, None]:
                  "leaves": model["model"].get_n_leaves()})
 result = pd.DataFrame(rows)
 result.to_csv(OUT / "02_depth.csv", index=False, encoding="utf-8-sig")
+
+'''이번 실습 해석'''
+# depth=5와 None은 검증 성능이 동점이므로, 보통 리프가 적고 구조가 단순한 depth=5를 선택합니다.
+
 print(result.round(3).to_string(index=False))
