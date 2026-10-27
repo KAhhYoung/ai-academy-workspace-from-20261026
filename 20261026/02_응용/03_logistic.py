@@ -32,8 +32,10 @@ pre = ColumnTransformer([("num", num, features[:2]), ("cat", cat, features[2:])]
 model = Pipeline([("pre", pre), ("model", LogisticRegression(C=1.0, max_iter=1000))])
 # TODO A03: 실패 여부로 학습하고 X_valid를 예측하세요.
 # 힌트: 실패1의 정답 열은 failed입니다.
-pass
-prediction = None
+model.fit(X_train, train["failed"])
+prediction = model.predict(X_valid)
+
+print("prediction: ", prediction)
 print("클래스 순서:", model.classes_)
 print("앞 4건 실패 확률:", model.predict_proba(X_valid)[:4, 1].round(3))
 print("혼동행렬 / 행=실제, 열=예측, 순서=[0,1]")

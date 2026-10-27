@@ -1,6 +1,7 @@
 """실습 06 응용: 분류의 train F1과 valid F1을 기록합니다."""
 from pathlib import Path
 import pandas as pd
+from tabulate import tabulate
 
 HERE = Path(__file__).resolve().parent
 raw = pd.read_csv(HERE / "data/requests.csv").set_index("request_id")
@@ -30,17 +31,33 @@ cat = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
 pre = ColumnTransformer([("num", num, features[:2]), ("cat", cat, features[2:])])
 
 rows = []
+
+# K값을 다르게 적용하여 비교하기
 for k in [1, 3, 5, 9, 15]:
     # TODO A06: n_neighbors를 반복 변수 k로 바꾸세요.
     # 힌트: K만 바꾸고 전처리와 분할은 고정합니다.
-    model = Pipeline([("pre", clone(pre)), ("model", KNeighborsClassifier(n_neighbors=1))])
+    model = Pipeline([("pre", clone(pre)), ("model", KNeighborsClassifier(n_neighbors=k))])
     model.fit(X_train, train["failed"])
     rows.append({"K": k,
         "train_F1": f1_score(train["failed"], model.predict(X_train), zero_division=0),
         "valid_F1": f1_score(valid["failed"], model.predict(X_valid), zero_division=0)})
 comparison = pd.DataFrame(rows)
-# 동점이면 작은 K: valid_F1 내림차순, K 오름차순으로 정렬합니다.
+
+
+# 정렬방식: valid_F1 내림차순(높은 점수가 먼저 옴), K 오름차순(작은 K가 먼저 옴)
+comparison_sorted = comparison.sort_values(["valid_F1", "K"], ascending=[False, True])
 best = comparison.sort_values(["valid_F1", "K"], ascending=[False, True]).iloc[0]
+
+# 터미널 출력형식을 표로 바꿔주는 tabulate 사용
+# best 처럼 숫자가 들어있는 Series 는 숫자를 행으로 읽는 과정에서 오류발생할 수 있으므로 DF으로 변경 후 사용
+print("comparison: ")
+print(tabulate(comparison, headers="keys", showindex=False))
+print("comparison_sorted: ")
+print(tabulate(comparison_sorted, headers="keys", showindex=False))
+print("best: ")
+print(tabulate(best.to_frame().T, headers="keys", showindex=False))
+
+
 out = HERE / "outputs"
 out.mkdir(exist_ok=True)
 

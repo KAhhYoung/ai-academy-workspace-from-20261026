@@ -24,6 +24,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import f1_score
 
 rows = []
+# 각기 다른 scaler 를 적용해보는 코드
 for name, scaler in [("none", "passthrough"), ("standard", StandardScaler()), ("minmax", MinMaxScaler())]:
     # passthrough는 숫자의 스케일만 바꾸지 않는 설정입니다. 결측은 여전히 train 중앙값으로 대체합니다.
     num = Pipeline([("imputer", SimpleImputer(strategy="median")), ("scaler", scaler)])
@@ -31,10 +32,11 @@ for name, scaler in [("none", "passthrough"), ("standard", StandardScaler()), ("
                     ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False))])
     pre = ColumnTransformer([("num", num, features[:2]), ("cat", cat, features[2:])])
     model = Pipeline([("pre", pre), ("model", KNeighborsClassifier(n_neighbors=5))])
+
     # TODO A05: train에서 학습하고 valid 예측을 구하세요.
     # 힌트: 앞 실습과 학습·예측 흐름이 같습니다.
-    pass
-    prediction = None
+    model.fit(X_train, train["failed"])
+    prediction = model.predict(X_valid)
     rows.append({"scale": name, "K": 5, "valid_F1": f1_score(valid["failed"], prediction, zero_division=0)})
 comparison = pd.DataFrame(rows)
 out = HERE / "outputs"

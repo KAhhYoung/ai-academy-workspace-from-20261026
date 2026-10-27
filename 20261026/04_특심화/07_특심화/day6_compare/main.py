@@ -19,6 +19,7 @@ def run_project(data_dir=None,output_dir=None):
     data_dir=Path(data_dir) if data_dir else ROOT/'data'
     out=Path(output_dir) if output_dir else ROOT/'outputs'
     d=load_data(data_dir)
+
     if LEVEL=='basic':
         # 실습06 결과 재사용. 제공 파일을 계산 결과인 것처럼 숨기지 않고 출처를 기록합니다.
         own=data_dir/'knn_search_from_ex06.csv'
@@ -27,6 +28,8 @@ def run_project(data_dir=None,output_dir=None):
         source='student_ex06_record' if own.exists() else 'provided_ex06_checkpoint'
     else:
         from search import search_k
+
+        # search_k: "KNN에서 이웃을 몇 개 참고하면 좋을까?”를 실험하는 함수
         search=search_k(d)
         source='recomputed_train_valid'
     ks=choose_k(search)
@@ -85,11 +88,18 @@ def run_project(data_dir=None,output_dir=None):
             'selection':selection,'metadata':metadata}
 
 def main():
+    # description: 파일의 맨위의 """...""", 없으면 __doc__=None
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir',type=Path,default=ROOT/'data')
     parser.add_argument('--output-dir',type=Path,default=ROOT/'outputs')
     args=parser.parse_args()
+
+    # threadpool_limits: 수치 계산에 사용하는 스레드 수를 제한하는 도구
+    # NumPy나 scikit-learn은 계산 속도를 높이기 위해 내부적으로 여러 스레드를 사용할 수 있음
     from threadpoolctl import threadpool_limits
+
+    # 블록이 실행되는 동안 지원되는 수치 계산 라이브러리의 스레드를 1개로 제한
+    # 주로 CPU 자원을 과도하게 사용하는 것을 막거나, 실행 시간을 안정적으로 비교하기 위해 사용
     with threadpool_limits(limits=1): run_project(args.data_dir,args.output_dir)
 
 if __name__=='__main__': main()
