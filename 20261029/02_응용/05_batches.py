@@ -5,21 +5,28 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
-X = torch.arange(20, dtype=torch.float32).reshape(10, 2) / 10
-y = torch.tensor([0, 0, 0, 0, 0, 1, 1, 1, 1, 1], dtype=torch.long)
-dataset = TensorDataset(X, y)
-# dataset을 batch_size=4, shuffle=False, drop_last=False로 공급하세요.
-# 정상 데이터 10건이 4·4·2로 나뉘어야 합니다. num_workers=0을 유지합니다.
-# >>> A05
-# TODO A05: 위 요구사항을 읽고 이 블록을 완성하세요.
-loader = DataLoader(dataset, batch_size=5, shuffle=False, num_workers=0)
-# <<< A05
+X = torch.arange(20, dtype=torch.float32).reshape(10, 2) / 10       # X.shape=(10, 2)
+y = torch.tensor([0, 0, 0, 0, 0, 1, 1, 1, 1, 1], dtype=torch.long)  # y.shape=(10,)
+# TensorDataset: 텐서를 열 방향으로 합치지 않습니다. 같은 인덱스의 데이터를 짝으로 묶습니다.
+dataset = TensorDataset(X, y)                                       # dataset.shape=(10, 3)
+
+'''TODO A05:
+    dataset을 batch_size=4, shuffle=False, drop_last=False로 공급하세요.
+    정상 데이터 10건이 4·4·2로 나뉘어야 합니다. num_workers=0을 유지합니다.
+'''
+# DataLoader 역할: Dataset에서 데이터를 꺼내 배치 단위로 묶어 전달하는 역할
+# drop_last=False: 마지막 배치의 샘플 수가 batch_size보다 적어도 사용한다는 뜻, 기본값
+# num_workers: 데이터를 불러오는 작업에 사용할 별도 프로세스 수
+# num_workers=0(기본값): 메인 프로세스에서 데이터를 불러옵니다.
+loader = DataLoader(dataset, batch_size=4, shuffle=False, drop_last=False, num_workers=0)
+
 sizes = []
 for index, (xb, yb) in enumerate(loader, 1):
     sizes.append([index, len(yb)])
     print(index, tuple(xb.shape), tuple(yb.shape))
 print("합계:", sum(n for _, n in sizes))
-logits = torch.tensor([[2., 0.], [0., 2.]])
+
+logits = torch.tensor([[2., 0.], [0., 2.]])         # logits.shape=(2, 2)
 print("예시 CE:", round(nn.CrossEntropyLoss()(logits, torch.tensor([0, 1])).item(), 6))
 out = Path(__file__).resolve().parent / "outputs"
 out.mkdir(exist_ok=True)

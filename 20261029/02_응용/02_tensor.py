@@ -6,7 +6,7 @@ a = torch.arange(6, dtype=torch.float32)
 # 아래 bias는 각 열에 더해집니다.
 # >>> A02
 # TODO A02: 위 요구사항을 읽고 이 블록을 완성하세요.
-matrix = a.reshape(1, 6)
+matrix = a.reshape(2, 3)
 # <<< A02
 bias = torch.tensor([10., 20., 30.])
 result = matrix + bias

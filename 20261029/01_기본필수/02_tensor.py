@@ -7,6 +7,15 @@ vector = torch.tensor([1.0, 2.0, 3.0])
 # >>> B02
 # TODO B02: 위 요구사항을 읽고 이 블록을 완성하세요.
 matrix = torch.tensor([1.0, 2.0, 3.0, 4.0], dtype=torch.float32)
+
+# view()
+# - 가능한 경우에만 원본과 같은 메모리를 사용
+# - 같은 메모리로 shape 변경이 불가능하면 오류 발생
+
+# reshape()
+# - 가능한 경우 원본과 같은 메모리를 사용
+# - 불가능하면 새 메모리에 데이터를 복사해서 shape 변경
+matrix = matrix.reshape(2,2)
 # <<< B02
 matrix = matrix.to("cpu")
 print("스칼라:", tuple(scalar.shape), scalar.dtype, scalar.device)
