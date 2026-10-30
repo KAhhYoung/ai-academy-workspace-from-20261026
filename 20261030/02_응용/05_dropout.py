@@ -2,14 +2,17 @@ from pathlib import Path
 import pandas as pd
 import torch
 from torch import nn
-
-torch.set_num_threads(1)
-base = Path(__file__).resolve().parent
 from torch.utils.data import TensorDataset, DataLoader
 import copy
 import matplotlib
+
 matplotlib.use("Agg")  # 창을 띄우지 않고 PNG에 저장합니다.
 import matplotlib.pyplot as plt
+
+torch.set_num_threads(1)
+
+base = Path(__file__).resolve().parent
+
 
 out = base / "outputs"
 out.mkdir(exist_ok=True)

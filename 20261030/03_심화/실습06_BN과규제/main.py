@@ -2,19 +2,20 @@ from pathlib import Path
 import pandas as pd
 import torch
 from torch import nn
-
-torch.set_num_threads(1)
-base = Path(__file__).resolve().parent
 from torch.utils.data import TensorDataset, DataLoader
 import copy
+import time
 import matplotlib
 matplotlib.use("Agg")  # 창을 띄우지 않고 PNG에 저장합니다.
 import matplotlib.pyplot as plt
 
+torch.set_num_threads(1)
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+base = Path(__file__).resolve().parent
 out = base / "outputs"
 out.mkdir(exist_ok=True)
-# 재현용 기본값 CPU. GPU 실습은 강사 확인 뒤 device 문자열만 cuda:0으로 바꿉니다.
-device = torch.device("cpu")
 df = pd.read_csv(base / "data" / "points.csv")
 train = df[df["split"] == "train"]
 valid = df[df["split"] == "valid"]
@@ -22,34 +23,71 @@ X_train = torch.tensor(train[["x1", "x2"]].values, dtype=torch.float32)
 y_train = torch.tensor(train["label"].values, dtype=torch.long)
 X_valid = torch.tensor(valid[["x1", "x2"]].values, dtype=torch.float32).to(device)
 y_valid = torch.tensor(valid["label"].values, dtype=torch.long).to(device)
+
 loss_fn = nn.CrossEntropyLoss()
-import time
-# baseline, BatchNorm만 추가, weight_decay=0.01만 추가한 세 후보를 만드세요.
-# Dropout·BatchNorm·Weight Decay는 목적과 작용 위치가 다른 기법입니다.
-# >>> S06
-# TODO S06: 위 요구사항에 맞게 이 블록만 완성합니다.
-configs = [{'name': 'baseline'}]
-# <<< S06
+
+'''TODO S06:
+    baseline, BatchNorm만 추가, weight_decay=0.01만 추가한 세 후보를 만드세요.
+    Dropout·BatchNorm·Weight Decay는 목적과 작용 위치가 다른 기법입니다.
+'''
+configs = [
+    {'name': 'baseline', 'bn': False, 'weight_decay': 0.0},
+    {'name': 'batchnorm', 'bn': True, 'weight_decay': 0.0},
+    {'name': 'weight_decay', 'bn': False, 'weight_decay': 0.01}
+]
+
 summary = []
 
+'''레이어 형상
+    baseline: nn.Linear(2, 32)-nn.ReLU()-nn.Dropout(p=0.0)-nn.Linear(32,32)-nn.ReLU()-nn.Dropout(p=0.0)-nn.Linear(32,2)
+    batchNorm: nn.Linear(2, 32)-nn.BatchNorm1d(32)-nn.ReLU()-nn.Dropout(p=0.0)-nn.Linear(32,32)-nn.BatchNorm1d(32)-nn.ReLU()-nn.Dropout(p=0.0)-nn.Linear(32,2)
+    두 모델 모두 형상은 (N, 2) → (N, 32) → (N, 32) → (N, 2)로 동일
+'''
 for config in configs:
     torch.manual_seed(42)
+
+    # width=32 로 공통
     width = config.get("width", 32)
     layers = [nn.Linear(2, width)]
+
+    # batchNorm=True 인 경우
     if config.get("bn", False):
         layers.append(nn.BatchNorm1d(width))
+
     layers.extend([nn.ReLU(), nn.Dropout(config.get("dropout", 0.0)), nn.Linear(width, width)])
+
     if config.get("bn", False):
         layers.append(nn.BatchNorm1d(width))
+
     layers.extend([nn.ReLU(), nn.Dropout(config.get("dropout", 0.0)), nn.Linear(width, 2)])
+
+
+
     model = nn.Sequential(*layers).to(device)
+
+    # batch_size=32
     batch_size = config.get("batch_size", 32)
+
     loader = DataLoader(TensorDataset(X_train, y_train), batch_size=batch_size, shuffle=True,
                         generator=torch.Generator().manual_seed(43), num_workers=0)
     optimizer = torch.optim.AdamW(model.parameters(), lr=.01,
                                    weight_decay=config.get("weight_decay", 0.0))
+
+    # 학습률 조정
+    # ReduceLROnPlateau: 관찰하는 지표가 개선되지 않으면 학습률을 줄이는 스케줄러
+    # 이번 실습의 관찰지표: valid_loss  / schedule.step(valid_loss) 로 사용가능
+
+    # ReduceLROnPlateau 파라미터 설명
+    #   optimizer: 학습률을 조절할 옵티마이저
+    #   mode="min": 관찰 지표가 작아져야 개선으로 판단
+    #   factor=0.5: 학습률 감소 시 현재 값의 절반으로 변경
+    #   patience=2: 개선 없는 epoch를 2번까지 허용하고, 3번 연속이면 학습률 감소
+    #   threshold=0.001: 개선으로 인정할 변화량의 기준
+    #   threshold_mode="abs": 비율이 아닌 절대 차이로 판단
+    #   현재 설정의 개선 조건: 현재 손실 < 기존 best 손실 - 0.001
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=.5, patience=2, threshold=.001, threshold_mode="abs")
+    
     history = []
     if device.type == "cuda":
         torch.cuda.synchronize()

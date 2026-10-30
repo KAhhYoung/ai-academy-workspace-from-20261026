@@ -24,12 +24,13 @@ X_valid = torch.tensor(valid[["x1", "x2"]].values, dtype=torch.float32).to(devic
 y_valid = torch.tensor(valid["label"].values, dtype=torch.long).to(device)
 loss_fn = nn.CrossEntropyLoss()
 import time
-# p=0.1, 0.3, 0.5의 세 후보를 만드세요.
-# 첫 10 epochs의 감소, best valid loss, 마지막 train_eval loss를 같이 확인하세요.
-# >>> S05
-# TODO S05: 위 요구사항에 맞게 이 블록만 완성합니다.
-configs = [{'name': 'dropout0.1', 'dropout': 0.1}]
-# <<< S05
+
+'''TODO S05:
+    p=0.1, 0.3, 0.5의 세 후보를 만드세요.
+    #첫 10 epochs의 감소, best valid loss, 마지막 train_eval loss를 같이 확인하세요.
+'''
+configs = [{'name': 'dropout0.1', 'dropout': 0.1}, {'name': 'dropout0.3', 'dropout': 0.3}, {'name': 'dropout0.5', 'dropout': 0.5}]
+
 summary = []
 
 for config in configs:
