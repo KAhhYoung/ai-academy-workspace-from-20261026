@@ -8,20 +8,18 @@ from torch import nn
 import pandas as pd
 from models import SmallCNN, build_model, set_training_mode
 from data import load_data
+from models import set_training_mode
+from train import evaluate
+import copy,time
 
 torch.manual_seed(42)
 torch.set_num_threads(1)
 out=ROOT/'outputs';out.mkdir(exist_ok=True)
 
 # 전이 모델은 실제 사전학습 가중치를 사용한다. 없으면 다운로드하며 무작위 대체하지 않는다.
-# BEGIN D06
 # TODO D06: SmallCNN·Head·Partial 세 경로를 실행한다.
 SETTINGS=[('small',16,1)]
-# END D06
 
-from models import set_training_mode
-from train import evaluate
-import copy,time
 rows=[]
 for kind,width,epochs in SETTINGS:
     torch.manual_seed(42)

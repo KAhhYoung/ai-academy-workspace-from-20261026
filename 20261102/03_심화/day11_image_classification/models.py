@@ -6,13 +6,28 @@ class SmallCNN(nn.Module):
     def __init__(self, width=16, batchnorm=False, dropout=0.0):
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(3, width, 3, padding=1),
-            nn.BatchNorm2d(width) if batchnorm else nn.Identity(), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Conv2d(width, width*2, 3, padding=1),
-            nn.BatchNorm2d(width*2) if batchnorm else nn.Identity(), nn.ReLU(), nn.MaxPool2d(2),
-            nn.Dropout2d(dropout), nn.AdaptiveAvgPool2d(1), nn.Flatten(),
+            nn.Conv2d(
+                in_channels=3,
+                out_channels=width,
+                kernel_size=3,
+                padding=1,
+            ),
+            nn.BatchNorm2d(num_features=width) if batchnorm else nn.Identity(), nn.ReLU(), nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(
+                in_channels=width,
+                out_channels=width*2,
+                kernel_size=3,
+                padding=1
+            ),
+            nn.BatchNorm2d(num_features=width*2) if batchnorm else nn.Identity(), nn.ReLU(), nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=dropout),
+            nn.AdaptiveAvgPool2d(output_size=1),
+            nn.Flatten(),
         )
-        self.fc = nn.Linear(width*2, 2)
+        # 분류헤드
+        self.fc = nn.Linear(
+            in_features=width*2,
+            out_features=2)
 
     def forward(self, x):
         return self.fc(self.features(x))

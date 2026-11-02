@@ -25,22 +25,33 @@ rows = []
 for mode in ["head", "partial"]:
     torch.manual_seed(42)
     model = resnet18(weights=weights)  # 가중치가 없으면 공식 다운로드. 무작위 초기화로 대체하지 않는다.
+
+    # Resnet18 backbone 동결(freeze)
     for param in model.parameters():
         param.requires_grad = False
+
+    # 새로 만든 fc는 기본적으로 requires_grad=True
     model.fc = nn.Linear(model.fc.in_features, 2)
     groups = [{"params": model.fc.parameters(), "lr": 0.001}]
+
+    # 부분 미세조정 모드에서는 layer4도 학습할 수 있도록 동결을 해제한다.
     if mode == "partial":
-        # BEGIN A06
         # TODO A06: partial일 때만 layer4의 미분을 켠다.
         for param in model.layer4.parameters():
-            param.requires_grad = False
-        # END A06
+            param.requires_grad = True
+
         groups.append({"params": model.layer4.parameters(), "lr": 0.0001})
+    
     optimizer = torch.optim.AdamW(groups, weight_decay=0.0001)
     train_loader = DataLoader(train, batch_size=4, shuffle=True, num_workers=0,
                               generator=torch.Generator().manual_seed(42))
+
+    # 기존 특징 추출부의 BatchNorm 통계 갱신을 막고, Dropout을 비활성화하면서 분류 헤드를 학습할 때 사용하는 패턴
+    # 기존 특징 추출부: 평가모드 / fc: 학습 모드
     model.eval()  # BN running 통계는 두 조건 모두 고정한다.
     model.fc.train()
+
+    # 부분 미세조정 모드에서는 layer4와 그 하위 층을 학습 모드로 전환한다.
     if mode == "partial":
         model.layer4.train()
         for layer in model.layer4.modules():

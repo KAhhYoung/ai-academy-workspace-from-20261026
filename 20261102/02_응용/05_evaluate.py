@@ -37,7 +37,6 @@ for epoch in range(1, 6):
     for images, labels in train_loader:
         optimizer.zero_grad()
         loss = loss_fn(model(images), labels)
-        # BEGIN A05
         # TODO A05: loss 역전파와 가중치 갱신을 순서대로 실행한다.
         pass
         # END A05
