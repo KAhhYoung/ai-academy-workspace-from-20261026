@@ -7,12 +7,16 @@ import numpy as np
 # OpenCV에는 영문 상대 경로를 전달합니다. 원본 파일은 덮어쓰지 않습니다.
 os.chdir(Path(__file__).resolve().parent)
 
-image = cv2.imread("scene.png")
+image = cv2.imread("scene.png")     # image.shape=(240, 320, 3)
 # >>> TODO B02
 # image를 Gray와 RGB로 각각 변환하여 gray, rgb에 넣으세요. 두 번째 인자는 변환 코드입니다.
-gray = image.copy()
-rgb = image.copy()
-# <<< TODO B02
+rgb_auto = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+rgb_manual = np.stack((image[:,:,2], image[:,:,1], image[:,:,0]), axis=2)
+print(np.array_equal(rgb_auto, rgb_manual))     # True
+
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
 small = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
 cv2.imwrite("p02_gray.png", gray)
 cv2.imwrite("p02_small.png", small)

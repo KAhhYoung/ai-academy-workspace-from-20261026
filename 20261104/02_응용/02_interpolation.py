@@ -14,6 +14,9 @@ Path("outputs").mkdir(exist_ok=True)
 
 image = cv2.imread("data/scene.png")
 rows = []
+# INTER_NEAREST: 가장 가까운 원본 픽셀값을 그대로 사용
+# INTER_LINEAR: 주변 픽셀 4개를 거리 비율로 가중 평균
+# INTER_AREA: 원본 픽셀 영역이 겹치는 면적 비율로 계산
 for name, method in [("nearest", cv2.INTER_NEAREST), ("linear", cv2.INTER_LINEAR), ("area", cv2.INTER_AREA)]:
     # >>> TODO A02
     # 현재 method를 사용해 (너비80, 높이60)으로 축소한 small을 만드세요.
@@ -22,6 +25,7 @@ for name, method in [("nearest", cv2.INTER_NEAREST), ("linear", cv2.INTER_LINEAR
     large = cv2.resize(small, (320, 240), interpolation=method)
     cv2.imwrite(f"outputs/p02_{name}_small.png", small)
     cv2.imwrite(f"outputs/p02_{name}_large.png", large)
+    
     # 동일 원본과 크기일 때만 오차를 비교합니다. float 변환으로 uint8 차이의 순환을 피합니다.
     mse = np.mean((image.astype(np.float32) - large.astype(np.float32)) ** 2)
     rows.append([name, small.shape[1], small.shape[0], round(float(mse), 4)])

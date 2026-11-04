@@ -11,8 +11,8 @@ image = cv2.imread("noisy.png")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 # >>> TODO B03
 # gray를 (5,5), sigmaX=0으로 흐리게 하여 blur를 만드세요. blur에 Canny 80,160을 적용하여 edge를 만드세요.
-blur = gray.copy()
-edge = gray.copy()
+blur = cv2.GaussianBlur(gray, (5,5), sigmaX=0)
+edge = cv2.Canny(blur, threshold1=80, threshold2=160)
 # <<< TODO B03
 cv2.imwrite("p03_blur.png", blur)
 cv2.imwrite("p03_edge.png", edge)

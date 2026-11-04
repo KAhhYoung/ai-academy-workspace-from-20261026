@@ -21,8 +21,8 @@ for shape_name,shape in [("rect",cv2.MORPH_RECT),("ellipse",cv2.MORPH_ELLIPSE)]:
             kernel=cv2.getStructuringElement(shape,(size,size))
             # >>> TODO H04
             # 현재 kernel과 iterations를 사용하여 binary에 Opening을 적용하세요.
-            result=binary.copy()
-            # <<< TODO H04
+            result = cv2.morphologyEx(image=binary, operation=cv2.MORPH_OPEN, kernel=kernel, iterations=iterations)
+            
             count, labels, stats, centroids=cv2.connectedComponentsWithStats(result,connectivity=8)
             name=f"{shape_name}_{size}_{iterations}"
             cv2.imwrite(f"outputs/{name}.png",result)

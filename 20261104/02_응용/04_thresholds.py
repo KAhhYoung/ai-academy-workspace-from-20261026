@@ -10,6 +10,7 @@ os.chdir(Path(__file__).resolve().parent)
 import csv
 import json
 from time import perf_counter
+out_dir = "outputs"
 Path("outputs").mkdir(exist_ok=True)
 
 gray = cv2.imread("data/scene.png", cv2.IMREAD_GRAYSCALE)

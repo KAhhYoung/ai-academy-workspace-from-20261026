@@ -12,8 +12,13 @@ attention = nn.MultiheadAttention(embed_dim=16,         # 토큰 하나를 표�
 # nn.MultiheadAttention 내부에서 학습 가능한 선형 변환으로 Q, K, V를 생성
 
 # TODO B05: 4개 head의 가중치를 평균내지 않고 각각 받는다.
-# query/key/value에는 같은 x를 넣는다. average_attn_weights=False를 지정한다.
-output, weights = attention(x,x,x,average_attn_weights=False)
+# query/key/value에는 같은 x를 넣는다.
+# average_attn_weights=False를 지정한다.
+# average_attn_Weights=True 지정 시, output 계산을 마친 뒤 반환할 weights 에만 적용함
+output, weights = attention(query=x,
+                            key=x,
+                            value=x,
+                            average_attn_weights=False)
 
 print("입력:", tuple(x.shape))
 print("출력:", tuple(output.shape))
