@@ -48,21 +48,28 @@ for mode in ["head", "partial"]:
 
     # 기존 특징 추출부의 BatchNorm 통계 갱신을 막고, Dropout을 비활성화하면서 분류 헤드를 학습할 때 사용하는 패턴
     # 기존 특징 추출부: 평가모드 / fc: 학습 모드
-    model.eval()  # BN running 통계는 두 조건 모두 고정한다.
+    model.eval()
+
+    # fc는 nn.Linear이므로 train/eval에 따른 계산 차이는 없지만, 분류 헤드를 학습 모드로 설정한다는 의도를 명시한다.
     model.fc.train()
 
     # 부분 미세조정 모드에서는 layer4와 그 하위 층을 학습 모드로 전환한다.
+    # layer4에서도 BatchNorm 층은 평가모드로 설정하는 이유(=running_mean,running_var 갱신안함):
+    #   -작은 데이터·배치로 미세조정할 때, 사전 학습된 BN 통계를 유지해 학습을 안정시키려는 선택
+    #   -필수 규칙은 아님. 새 데이터가 충분하고 배치가 크거나, ImageNet과 데이터 특성이 크게 다르면 BN 통계도 갱신하는 방법을 검토할 수 있음
     if mode == "partial":
         model.layer4.train()
         for layer in model.layer4.modules():
             if isinstance(layer, nn.BatchNorm2d):
                 layer.eval()
+
     start = time.perf_counter()
     for images, labels in train_loader:
         optimizer.zero_grad()
         nn.functional.cross_entropy(model(images), labels).backward()
         optimizer.step()
     training_seconds = time.perf_counter() - start
+
     model.eval()
     total_loss, correct, count = 0.0, 0, 0
     with torch.no_grad():
@@ -71,8 +78,15 @@ for mode in ["head", "partial"]:
             total_loss += nn.functional.cross_entropy(logits, labels).item()*len(labels)
             correct += (logits.argmax(1)==labels).sum().item()
             count += len(labels)
-    rows.append(dict(mode=mode, pretrained=weights.name, image_size=224, epochs=1,
+    rows.append(dict(mode=mode,
+                     pretrained=weights.name,
+                     image_size=224,
+                     epochs=1,
                      trainable_params=sum(p.numel() for p in model.parameters() if p.requires_grad),
-                     valid_loss=total_loss/count, valid_accuracy=correct/count, training_seconds=training_seconds))
+                     valid_loss=total_loss/count,
+                     valid_accuracy=correct/count,
+                     training_seconds=training_seconds
+    ))
+    
 print(pd.DataFrame(rows).drop(columns="training_seconds").round(4).to_string(index=False))
 pd.DataFrame(rows).to_csv(out / "transfer_comparison.csv", index=False)
