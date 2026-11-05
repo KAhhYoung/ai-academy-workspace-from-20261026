@@ -8,6 +8,7 @@ from torch import nn
 from torchvision.datasets import ImageFolder
 from torchvision import transforms as tr
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
+import cv2
 
 torch.set_num_threads(1)
 torch.manual_seed(14)
@@ -18,13 +19,14 @@ OUT = BASE
 # 여기서는 [0,1] RGB 32×32로 학습한 교육용 source 가중치를 사용합니다.
 # ImageNet ResNet18과 입력 변환을 섞지 않습니다.
 transform = tr.Compose([tr.Resize((32, 32)), tr.ToTensor()])
-import cv2
+
 train = ImageFolder(DATA / "train", transform=transform)
 valid = ImageFolder(DATA / "valid", transform=transform)
 X_train = torch.stack([train[i][0] for i in range(len(train))])
 y_train = torch.tensor(train.targets, dtype=torch.long)
 X_valid = torch.stack([valid[i][0] for i in range(len(valid))])
 y_valid = torch.tensor(valid.targets, dtype=torch.long)
+
 # 제공 부분: 0~8은 Backbone, 9는 새 3클래스 Head입니다.
 model = nn.Sequential(
     nn.Conv2d(3, 8, 3, padding=1, bias=False), nn.BatchNorm2d(8), nn.ReLU(), nn.MaxPool2d(2),
@@ -32,55 +34,97 @@ model = nn.Sequential(
     nn.AdaptiveAvgPool2d((4, 4)), nn.Flatten(), nn.Linear(256, 3),
 )
 # 안전한 수치 배열만 읽습니다. Target 이미지로 사전학습한 파일이 아닙니다.
+# 파일에 저장된 가중치를 model에 적용
 with np.load(DATA / "source_backbone.npz", allow_pickle=False) as saved:
     state = model.state_dict()
     state.update({name: torch.from_numpy(saved[name].copy()) for name in saved.files})
 model.load_state_dict(state)
+
 # requires_grad는 가중치 갱신, eval()은 BatchNorm 통계 사용 방식을 제어합니다.
 for p in model.parameters():
     p.requires_grad = False
+
+# 전이학습 (head)
 for p in model[9].parameters():
     p.requires_grad = True
+
 model.eval()  # 고정 Backbone의 running 통계도 보존
+
+# 학습이 필요한 10번째 층의 파라미터만 옵티마이저에 전달
 optimizer = torch.optim.AdamW(model[9].parameters(), lr=0.01, weight_decay=0.0)
 criterion = nn.CrossEntropyLoss()
 
 history = []
 best_loss = float("inf")
+
+# epoch=8
 for epoch in range(1, 9):
+    # 학습 시작
     optimizer.zero_grad()
     loss = criterion(model(X_train), y_train)
     # TODO B07: 역전파와 Optimizer 갱신을 수행하세요.
-    # BEGIN B07
-    pass  # loss.backward()와 optimizer.step() 두 문장을 작성하세요.
-    # END B07
+    loss.backward()
+    optimizer.step()
+
+    # epoch 마다 검증데이터로 검증손실 평균 구하기
     with torch.no_grad():
         valid_loss = criterion(model(X_valid), y_valid).item()
+
+    # epoch 당 검증손실 평균 기록
     history.append({"epoch": epoch, "valid_loss": valid_loss})
+
+    # 최소 검증손실평균 / epoch 시점 기록
     if valid_loss < best_loss:
         best_loss = valid_loss
         best_epoch = epoch
-        best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
+
+        # model.state_dict()는 기본적으로 이미 detach된 Tensor를 반환하므로 detach()는 생략가능, 최적 시점의 값을 보존하기 위한 clone()은 필요
+        #best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
+        best_state = {k: v.clone() for k, v in model.state_dict().items()}
+
+# 평균 검증손실이 최소인 시점의 모델 상태로 복원 
 model.load_state_dict(best_state)
+
+# 최종 모델을 검증데이터로 검증하기
 with torch.no_grad():
     logits = model(X_valid)
     probabilities = logits.softmax(1)
     # TODO B08: 각 행의 가장 큰 logit 열을 예측 라벨로 고르세요.
-    # BEGIN B08
-    predictions = torch.zeros(len(valid), dtype=torch.long)  # argmax로 바꾸세요.
-    # END B08
-metrics = {"accuracy": accuracy_score(y_valid, predictions), "macro_f1": f1_score(y_valid, predictions, labels=[0,1,2], average="macro", zero_division=0), "best_epoch": best_epoch, "valid_n": len(valid), "source": "synthetic_source_pretraining", "test_used": False}
+    # numpy: argmax(axis), tensor: argmax(dim)
+    #predictions = logits.argmax(axis=1)
+    predictions = logits.argmax(dim=1)
+
+# 검증 성능 지표와 학습·평가 정보를 딕셔너리로 정리
+metrics = {"accuracy": accuracy_score(y_valid, predictions),
+           "macro_f1": f1_score(y_valid, predictions, labels=[0,1,2], average="macro", zero_division=0),
+           "best_epoch": best_epoch,
+           "valid_n": len(valid),
+           "source": "synthetic_source_pretraining",
+           "test_used": False
+}
+
+# 파일로 저장
 pd.DataFrame([metrics]).to_csv(OUT / "metrics.csv", index=False)
 pd.DataFrame(history).to_csv(OUT / "history.csv", index=False)
-pd.DataFrame({"file": [Path(p).name for p,_ in valid.samples], "actual": y_valid.numpy(), "predicted": predictions.numpy(), "confidence": probabilities.max(1).values.numpy()}).to_csv(OUT / "predictions.csv", index=False)
-# TODO B09: metrics를 UTF-8 JSON 문자열로 저장하세요. 아래 제공된 경로를 사용합니다.
-# BEGIN B09
-pass  # write_text로 metrics JSON을 저장하세요.
-# END B09
+pd.DataFrame({"file": [Path(p).name for p,_ in valid.samples],
+              "actual": y_valid.numpy(),
+              "predicted": predictions.numpy(),
+              "confidence": probabilities.max(1).values.numpy()}
+            ).to_csv(OUT / "predictions.csv", index=False)
+# TODO B09: metrics를 UTF-8 JSON 문자열로 저장하세요. write_text로 metrics JSON을 저장하세요.
+(OUT / "metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+
+# 혼동행렬 파일로 저장
 pd.DataFrame(confusion_matrix(y_valid, predictions, labels=[0,1,2]), index=valid.classes, columns=valid.classes).to_csv(OUT / "confusion.csv")
+
+# project_error_*.png 패턴과 일치하는 기존 파일들을 삭제하는 코드
+# 새 결과를 저장하기 전에 이전 실행의 오류 이미지를 정리하는 용도입니다. 휴지통으로 이동하지 않고 삭제합니다.
 for old in OUT.glob("project_error_*.png"):
     old.unlink()
+
+# 예측이 틀린 데이터의 위치를 리스트로 구하려는 코드
 errors = (predictions != y_valid).nonzero().flatten().tolist()
+
 for i in errors[:8]:
     image = (X_valid[i].permute(1,2,0).numpy()*255).astype(np.uint8)
     cv2.imwrite(str(OUT / f"project_error_{i:02d}.png"), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))

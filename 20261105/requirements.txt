@@ -4,3 +4,9 @@ pandas==2.2.3
 scikit-learn==1.8.0
 opencv-python==4.13.0.92
 Pillow==12.3.0
+matplotlib==3.10.8
+
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+torch==2.14.0+cu130
+torchvision==0.29.0+cu130

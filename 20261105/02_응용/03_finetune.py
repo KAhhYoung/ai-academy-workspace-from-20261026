@@ -8,6 +8,7 @@ from torch import nn
 from torchvision.datasets import ImageFolder
 from torchvision import transforms as tr
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
+import time
 
 torch.set_num_threads(1)
 torch.manual_seed(14)
@@ -19,7 +20,7 @@ OUT.mkdir(exist_ok=True)
 # 여기서는 [0,1] RGB 32×32로 학습한 교육용 source 가중치를 사용합니다.
 # ImageNet ResNet18과 입력 변환을 섞지 않습니다.
 transform = tr.Compose([tr.Resize((32, 32)), tr.ToTensor()])
-import time
+
 train = ImageFolder(DATA / "train", transform=transform)
 valid = ImageFolder(DATA / "valid", transform=transform)
 X_train = torch.stack([train[i][0] for i in range(len(train))])
@@ -28,18 +29,24 @@ X_valid = torch.stack([valid[i][0] for i in range(len(valid))])
 y_valid = torch.tensor(valid.targets, dtype=torch.long)
 
 # TODO A03: Head-only, Partial 두 전략만 비교하세요. 데이터와 epoch는 고정합니다.
-# BEGIN A03
-experiments = [("head", "none")]  # partial 후보를 추가하세요.
-# END A03
+experiments = [("head", "none"), ("partial", "none")]  # partial 후보를 추가하세요.
+
 rows = []
 all_history = []
 for strategy, balance in experiments:
     torch.manual_seed(14)
     # 제공 부분: 0~8은 Backbone, 9는 새 3클래스 Head입니다.
     model = nn.Sequential(
-        nn.Conv2d(3, 8, 3, padding=1, bias=False), nn.BatchNorm2d(8), nn.ReLU(), nn.MaxPool2d(2),
-        nn.Conv2d(8, 16, 3, padding=1, bias=False), nn.BatchNorm2d(16), nn.ReLU(),
-        nn.AdaptiveAvgPool2d((4, 4)), nn.Flatten(), nn.Linear(256, 3),
+        nn.Conv2d(in_channels=3, out_channels=8, kernel_size=3, padding=1, bias=False),
+        nn.BatchNorm2d(num_features=8),
+        nn.ReLU(),
+        nn.MaxPool2d(kernel_size=2),
+        nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, padding=1, bias=False),
+        nn.BatchNorm2d(num_features=16),
+        nn.ReLU(),
+        nn.AdaptiveAvgPool2d(output_size=(4, 4)),   # 특징맵의 공간 크기를 4×4로 맞춤
+        nn.Flatten(),
+        nn.Linear(256, 3),
     )
     # 안전한 수치 배열만 읽습니다. Target 이미지로 사전학습한 파일이 아닙니다.
     with np.load(DATA / "source_backbone.npz", allow_pickle=False) as saved:
