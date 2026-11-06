@@ -2,14 +2,25 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+
 BASE=Path(__file__).resolve().parent
-out=BASE/"outputs";out.mkdir(exist_ok=True)
+out=BASE/"outputs"
+out.mkdir(exist_ok=True)
+
 table=pd.read_csv(BASE/"data/boxes_gt.csv")
-b=table[["x1","y1","x2","y2"]].to_numpy(float);width,height=160,128
-# >>> A01
-# 요구: 중심 x/y와 폭/높이를 계산하고 각 축 크기로 정규화하세요.
-pass  # TODO A01: 위 요구사항의 핵심 코드를 작성하세요.
-# <<< A01
+b=table[["x1","y1","x2","y2"]].to_numpy(float)
+width,height=160,128
+# TODO A01: 중심 x/y와 폭/높이를 계산하고 각 축 크기로 정규화하세요.
+# YOLO는 박스를 **(중심 x, 중심 y, 너비, 높이)**로 표현하고, 이미지 크기로 나눠 정규화합니다.
+yolo = []
+for x1,y1,x2,y2 in b:
+    x_center = (x1+x2) / (2*width),
+    y_center = (y1+y2) / (2*height),
+    w = (x2-x1) / width,
+    h = (y2-y1) / height
+
+    row = (x_center, y_center, w, h)
+    yolo.append(row)
 pixel=yolo*np.array([width,height,width,height])
 restored=np.column_stack((pixel[:,0]-pixel[:,2]/2,pixel[:,1]-pixel[:,3]/2,pixel[:,0]+pixel[:,2]/2,pixel[:,1]+pixel[:,3]/2))
 print("최대 왕복 오차(px):", float(np.max(np.abs(b-restored))))

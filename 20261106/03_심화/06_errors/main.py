@@ -2,17 +2,20 @@
 from pathlib import Path
 import sys
 import pandas as pd
-BASE=Path(__file__).resolve().parent
+BASE=Path(__file__).resolve().parent    # 06_errors
 sys.path.insert(0,str(BASE.parent/"provided"))
 from geometry import iou_matrix
 from metrics import match_predictions
-out=BASE/"outputs";out.mkdir(exist_ok=True)
-p=pd.read_csv(BASE.parent/"data/boxes_fixture.csv").to_dict("records")
-g=pd.read_csv(BASE.parent/"data/boxes_gt.csv").to_dict("records")
-# >>> C06
-# 요구: IoU .5 일대일 매칭을 호출하세요. 결과의 gt_index가 None이면 FP입니다.
-pass  # TODO C06: 위 요구사항의 핵심 코드를 작성하세요.
-# <<< C06
+
+out=BASE/"outputs"
+out.mkdir(exist_ok=True)
+
+p=pd.read_csv(BASE.parent/"data/boxes_fixture.csv").to_dict(orient="records")
+g=pd.read_csv(BASE.parent/"data/boxes_gt.csv").to_dict(orient="records")
+
+# TODO C06: IoU .5 일대일 매칭을 호출하세요. 결과의 gt_index가 None이면 FP입니다.
+records,counts=match_predictions(p,g,.5)
+
 keys=["x1","y1","x2","y2"];rows=[]
 for r in records:
     q=p[r["prediction_index"]]

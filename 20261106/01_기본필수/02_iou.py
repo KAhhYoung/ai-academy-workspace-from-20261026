@@ -9,25 +9,27 @@ used = set()  # 하나의 정답은 한 번만 TP로 연결합니다.
 rows = []
 for p in pred.itertuples():
     overlaps = []
+
+    # IoU는 같은 클래스에서 수행
     for g in truth.itertuples():
         width = max(0, min(p.x2, g.x2) - max(p.x1, g.x1))
         height = max(0, min(p.y2, g.y2) - max(p.y1, g.y1))
         intersection = width * height
         union = (p.x2-p.x1)*(p.y2-p.y1) + (g.x2-g.x1)*(g.y2-g.y1) - intersection
-        # >>> B02
-        # 요구: intersection을 union으로 나누어 iou를 계산하세요.
+        # TODO B02: intersection을 union으로 나누어 iou를 계산하세요.
         # 이 실습의 데이터는 모두 양의 면적이므로 union은 0이 아닙니다.
-        pass  # TODO B02: 위 요구사항의 핵심 코드를 작성하세요.
-        # <<< B02
+        # intersection: 교집합
+        # union: 합집합
+        iou = intersection / union
         overlaps.append(iou)
+
     matched = False
+    # IoU가 높은 순으로 꺼내기
     for j in np.argsort(-np.asarray(overlaps)):
         if truth.iloc[j].class_id != p.class_id or j in used:
             continue
-        # >>> B03
-        # 요구: 같은 클래스의 미사용 정답에 IoU>=0.5이면 연결하고 used에 기록하세요.
-        pass  # TODO B03: 위 요구사항의 핵심 코드를 작성하세요.
-        # <<< B03
+        # TODO B03: 같은 클래스의 미사용 정답에 IoU>=0.5이면 연결하고 used에 기록하세요.
+
     rows.append([p.class_id, p.confidence, round(max(overlaps), 4), "TP" if matched else "FP"])
 table = pd.DataFrame(rows, columns=["class", "confidence", "max_iou", "result"])
 print(table.to_string(index=False))

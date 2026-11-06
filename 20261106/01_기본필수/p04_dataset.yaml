@@ -1,0 +1,8 @@
+names:
+- square
+- circle
+- triangle
+train: "C:\\workspace-from-20261026\\20261106\\01_\uAE30\uBCF8\uD544\uC218\\data\\\
+  images\\train"
+val: "C:\\workspace-from-20261026\\20261106\\01_\uAE30\uBCF8\uD544\uC218\\data\\images\\\
+  val"
