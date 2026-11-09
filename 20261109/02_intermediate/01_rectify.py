@@ -13,9 +13,12 @@ lesson = json.loads((data / 'lesson.json').read_text(encoding='utf-8'))
 image = cv2.imread(str(data / 'perspective.png'))
 corners = np.float32(lesson['perspective']['corners'])  # TL, TR, BR, BL 제공
 size = (1000, 700)  # width, height
-matrix = cv2.getPerspectiveTransform(corners, np.float32([[0,0],[999,0],[999,699],[0,699]]))
+
+# src: 원본 이미지의 문서 모서리 좌표
+# dst: 보정 후 모서리 좌표
+matrix = cv2.getPerspectiveTransform(src=corners, dst=np.float32([[0,0],[999,0],[999,699],[0,699]]))
 # TODO A01
-rectified = cv2.resize(image, size)
+rectified = cv2.resize(src=image, dsize=size)
 # TODO 끝 A01
 gray = cv2.cvtColor(rectified, cv2.COLOR_BGR2GRAY)
 adaptive = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 11)

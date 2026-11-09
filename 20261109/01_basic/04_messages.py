@@ -8,9 +8,8 @@ doc = lesson['documents']['doc01']
 rows = []
 for answer in doc['mock_vlm']['responses']:
     question = lesson['questions'][answer['field']]
-# TODO B05
-    messages = []
-# TODO 끝 B05
+# TODO B05: 예시) messages = [{‘role’: ‘user’, ‘content’: 000]
+    messages = [{'role': 'user', 'question': question}]
     rows.append({'backend': 'mock', 'messages': messages, 'response': answer, 'model_id': None, 'inference_ms': None})
     print(question, '->', answer['answer'])
 (base / 'p04_mock_answers.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
