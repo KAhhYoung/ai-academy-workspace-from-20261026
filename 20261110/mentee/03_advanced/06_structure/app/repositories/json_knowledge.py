@@ -33,9 +33,7 @@ def list_entries(category: str | None = None) -> list[dict]:
         entries = [entry for entry in entries if entry["category"] == category]
     # BEGIN H06-02
     # TODO H06-02: Repository의 목록 조회 결과를 반환하세요. HTTP Response를 만들지 마세요.
-    # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-    raise NotImplementedError("H06-02를 먼저 완성하세요.")
-    # END H06-02
+    return entries
 
 
 def find_entry(knowledge_id: int) -> dict | None:

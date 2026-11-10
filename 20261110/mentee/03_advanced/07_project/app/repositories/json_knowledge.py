@@ -51,9 +51,7 @@ def create(fields: dict) -> dict:
         data["next_id"] += 1
         # BEGIN H07-01
         # TODO H07-01: 생성 데이터와 next_id를 파일에 저장하는 연결을 완성하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("H07-01를 먼저 완성하세요.")
-        # END H07-01
+        write_data(data)
     return entry
 
 def update(knowledge_id: int, fields: dict) -> dict | None:

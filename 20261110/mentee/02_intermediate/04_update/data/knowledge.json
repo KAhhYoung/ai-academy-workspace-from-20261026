@@ -8,10 +8,10 @@
       "content": "프로젝트별 패키지를 분리한다."
     },
     {
-      "id": 2,
-      "title": "서버 실행",
+      "title": "개발서버 실행",
+      "content": "uvicorn으로 dev 서버를 켠다.",
       "category": "api",
-      "content": "uvicorn으로 개발 서버를 켠다."
+      "id": 2
     },
     {
       "id": 3,

@@ -65,27 +65,19 @@ def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):
     with LOCK:
         data = read_data()
         for i, entry in enumerate(data["entries"]):
-            # BEGIN A04-01
             # TODO A04-01: 현재 항목이 수정 대상인지 비교 결과를 same_id에 넣으세요.
-            # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-            raise NotImplementedError("A04-01를 먼저 완성하세요.")
-            # END A04-01
+            same_id = entry["id"] == knowledge_id
             if same_id:
-                # BEGIN A04-02
                 # TODO A04-02: 새 입력을 dict로 만들고 기존 knowledge_id를 유지하여 updated를 구성하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-02를 먼저 완성하세요.")
-                # END A04-02
-                # BEGIN A04-03
+                updated = payload.model_dump()
+                #updated["id"] = entry["id"]
+                updated["id"] = knowledge_id
                 # TODO A04-03: 대상 위치 i를 updated로 교체하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-03를 먼저 완성하세요.")
-                # END A04-03
-                # BEGIN A04-04
+                #del data["entries"][i]
+                #data["entries"].insert(i, updated)
+                data["entries"][i] = updated
                 # TODO A04-04: 변경 내용을 저장하세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("A04-04를 먼저 완성하세요.")
-                # END A04-04
+                write_data(data)
                 return updated
     # 없는 ID를 새로 생성하지 않습니다. PUT에서도 세 입력 필드가 모두 필수입니다.
     raise HTTPException(404, "Knowledge not found")

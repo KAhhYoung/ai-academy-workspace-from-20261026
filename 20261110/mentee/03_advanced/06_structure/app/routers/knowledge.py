@@ -18,11 +18,8 @@ def get_knowledge(knowledge_id: int):
 
 @router.post("", status_code=201, response_model=Knowledge)
 def create_knowledge(payload: KnowledgeWrite):
-    # BEGIN H06-03
     # TODO H06-03: 검증된 payload를 dict로 바꾸어 repo.create에 전달하고 결과를 반환하세요.
-    # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-    raise NotImplementedError("H06-03를 먼저 완성하세요.")
-    # END H06-03
+    return repo.create(payload.model_dump())
 
 @router.put("/{knowledge_id}", response_model=Knowledge)
 def update_knowledge(knowledge_id: int, payload: KnowledgeWrite):

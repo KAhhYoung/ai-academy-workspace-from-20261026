@@ -21,14 +21,13 @@ def find_entry(knowledge_id: int) -> dict | None:
 def create(fields: dict) -> dict:
     with LOCK:
         data = read_data()
-        # BEGIN H03-01
         # TODO H03-01: fields를 복사한 entry를 만들고 현재 next_id를 id로 지정하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("H03-01를 먼저 완성하세요.")
-        # END H03-01
-        # BEGIN H03-02
+        entry = fields.copy()
+        entry["id"] = data["next_id"]
         # TODO H03-02: entry를 추가하고 다음 ID를 증가시켜 data 전체를 저장하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("H03-02를 먼저 완성하세요.")
-        # END H03-02
+        data["entries"].append(entry)
+        data["next_id"] += 1
+
+        # data 저장?
+        write_data(data)
     return entry

@@ -45,9 +45,8 @@ def delete(knowledge_id: int) -> bool:
         data = read_data()
         for i, entry in enumerate(data["entries"]):
             if entry["id"] == knowledge_id:
-                # BEGIN H05-01
                 # TODO H05-01: 대상 위치를 제거하고 저장한 뒤 True를 반환하세요. next_id는 변경하지 마세요.
-                # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-                raise NotImplementedError("H05-01를 먼저 완성하세요.")
-                # END H05-01
+                data["entries"].pop(i)
+                write_data(data)
+                return True
     return False

@@ -24,3 +24,9 @@ def get_knowledge(knowledge_id: int):
 @app.post("/api/knowledge", status_code=201, response_model=Knowledge)
 def create_knowledge(payload: KnowledgeWrite):
     return repo.create(payload.model_dump())
+
+''' by.주영님
+if name == “main”:
+import uvicorn
+uvicorn.run(“main:app”, host=“127.0.0.1”, port=18080, reload=True)
+'''

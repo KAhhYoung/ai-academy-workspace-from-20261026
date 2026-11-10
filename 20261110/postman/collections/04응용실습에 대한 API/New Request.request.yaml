@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://127.0.0.1:18080/api/knowledge/2
+method: PUT
+body:
+  type: json
+  content: "{\r
+
+    \    \"title\": \"개발서버 실행\",\r
+
+    \    \"category\": \"api\",\r
+
+    \    \"content\": \"uvicorn으로 dev 서버를 켠다.\"\r
+
+    }"
+order: 1000

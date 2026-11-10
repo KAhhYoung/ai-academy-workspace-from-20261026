@@ -52,12 +52,8 @@ def create_knowledge(payload: KnowledgeWrite):
     # 하나의 잠금으로 현재 데이터 읽기 → ID 발급 → 저장을 함께 보호합니다.
     with LOCK:
         data = read_data()
-        # BEGIN A03-01
         # TODO A03-01: 검증된 payload를 dict로 변환하여 entry에 저장하세요.
-        # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
-        raise NotImplementedError("A03-01를 먼저 완성하세요.")
-        # END A03-01
-        # BEGIN A03-02
+        entry = payload.model_dump()
         # TODO A03-02: 현재 data의 next_id를 새 entry의 id로 지정하세요.
         # 아래 미완성 표시를 지우고 요구한 코드를 작성하세요.
         raise NotImplementedError("A03-02를 먼저 완성하세요.")
