@@ -14,6 +14,7 @@ def list_knowledge():
     with LOCK:
         data = read_data()
     # 파일 전체에는 내부용 next_id도 있으므로 entries만 응답합니다.
+
     # TODO B02-01: 파일 전체 data에서 entries 목록만 반환하세요. next_id가 포함된 dict 전체를 반환하지 마세요.
     return data["entries"]
 

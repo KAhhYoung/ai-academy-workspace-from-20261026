@@ -21,6 +21,7 @@ def list_knowledge(category: str | None = None):
         data = read_data()
     result = data["entries"]
     if category is not None:
+
         # TODO A02-01: category와 정확히 일치하는 항목만 result에 남기세요. 일치 항목이 없으면 빈 목록이어야 합니다.
         # 힌트: for 반복문으로 새 목록을 만들어도 됩니다.
         #for e in entry_data:
