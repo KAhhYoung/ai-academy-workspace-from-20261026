@@ -13,11 +13,10 @@ $guard$;
 -- 1. BEGIN만 선택하여 실행합니다.
 BEGIN;
 -- 2. 아래 INSERT ... RETURNING만 실행하고 실제 ID를 기록합니다.
--- BEGIN H-SQL-10
 -- TODO H-SQL-10: title='보충 학습', content='복습 자료는 개인 폴더에서 확인합니다.',
 -- category_id=1인 행을 INSERT하고 id·title·category_id를 RETURNING하세요. 실제 id를 기억합니다.
-__TODO_H_SQL_10__;
--- END H-SQL-10
+INSERT 
+
 -- 3. COMMIT만 실행한 뒤 다음 SELECT를 따로 실행합니다.
 COMMIT;
 SELECT COUNT(*) AS knowledge_count FROM public.knowledge;

@@ -7,9 +7,7 @@ BEGIN
     END IF;
 END;
 $guard$;
--- BEGIN H-DDL-09
--- TODO H-DDL-09: idx_knowledge_category_id라는 비고유 B-tree 인덱스를
--- knowledge(category_id)에 만드세요.
-__TODO_H_DDL_09__
--- END H-DDL-09
+-- TODO H-DDL-09: idx_knowledge_category_id라는 비고유 B-tree 인덱스를 knowledge(category_id)에 만드세요.
+CREATE INDEX idx_knowledge_category_id
+ON knowledge USING btree (category_id)
 COMMIT;

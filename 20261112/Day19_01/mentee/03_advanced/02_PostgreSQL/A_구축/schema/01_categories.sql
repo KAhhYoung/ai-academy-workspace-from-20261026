@@ -8,17 +8,12 @@ BEGIN
 END;
 $guard$;
 CREATE TABLE public.categories (
-    -- BEGIN H-DDL-01
     -- TODO H-DDL-01: categories.id의 BIGINT·ALWAYS IDENTITY·PK를 선언하세요.
-    __TODO_H_DDL_01__
-    -- END H-DDL-01
-    -- BEGIN H-DDL-02
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     -- TODO H-DDL-02: categories.name의 VARCHAR(30)·NOT NULL·UNIQUE를 선언하세요.
-    __TODO_H_DDL_02__
-    -- END H-DDL-02
-    -- BEGIN H-DDL-03
+    name VARCHAR(30) NOT NULL UNIQUE,
     -- TODO H-DDL-03: categories_name_length CHECK를 작성하세요.
-    __TODO_H_DDL_03__
-    -- END H-DDL-03
+    CONSTRAINT categories_name_length
+        CHECK (char_length(name) BETWEEN 1 AND 30)
 );
 COMMIT;
