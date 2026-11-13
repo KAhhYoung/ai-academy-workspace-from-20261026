@@ -38,8 +38,9 @@ def health(db: Session = Depends(get_db)):
 def list_knowledge(category: str | None = Query(default=None), db: Session = Depends(get_db)):
     # TODO B03: Knowledge와 Category를 함께 읽어 id 순으로 목록을 반환하세요. category가 오면 분류를 필터합니다.
     # 방법1: select(Knowledge, Category).join(Knowledge.category): 두 객체를 각각 받음 / 기본 join방식: inner join
-    # 방법2: joinedload방식: Knowledge 객체의 속성으로 카테고리를 사용 (ex. Knowledge.category.name) / 기본 join방식: left outer join
-    
+    # 방법2: joinedload방식: Knowledge 객체의 속성으로 카테고리를 사용. 언제 데이터를 가져올지 정하는 옵션 (ex. Knowledge.category.name) / 기본 join방식: left outer join
+    # join 이 오히려 join만으로 로딩하지 않고 joinedload는 객체 같이 로딩함. db.execute(), db.scalars(), db.scalar() 등으로 쿼리를 실행하면 JOIN도 실행됨
+
     stmt = select(Knowledge, Category).join(Knowledge.category)
     if category is not None:
         stmt = stmt.where(Category.name == category)
