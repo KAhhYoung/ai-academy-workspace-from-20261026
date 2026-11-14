@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://127.0.0.1:18080/api/knowledge
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"title\": \"입력 성공\",\r
+
+    \    \"content\": \"api\",\r
+
+    \    \"category\": \"성공이면 200 응답을 반환한다.\"\r
+
+    }"
+order: 2000
