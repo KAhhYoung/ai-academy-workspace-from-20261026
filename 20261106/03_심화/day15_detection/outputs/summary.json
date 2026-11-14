@@ -1,0 +1,9 @@
+{
+  "images": 12,
+  "frames": 30,
+  "detections": 38,
+  "track_rows": 107,
+  "model_sha256": "ba0e6150d8edf9258c057e7eb8b20ed8a0ba359db38f8fa69afba3e2e94dd4c0",
+  "split": "val",
+  "test_used": false
+}

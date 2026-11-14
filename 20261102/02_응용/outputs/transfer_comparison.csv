@@ -1,0 +1,3 @@
+mode,pretrained,image_size,epochs,trainable_params,valid_loss,valid_accuracy,training_seconds
+head,IMAGENET1K_V1,224,1,1026,0.2218177691102028,1.0,2.705125599866733
+partial,IMAGENET1K_V1,224,1,8394754,0.0002171675740100909,1.0,3.534542900044471

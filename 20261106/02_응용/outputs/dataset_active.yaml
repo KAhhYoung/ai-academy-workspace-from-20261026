@@ -1,0 +1,8 @@
+names:
+- square
+- circle
+- triangle
+train: "C:\\Users\\AHYOUNG\\NVIDIA_AI_CORE\\ai-academy-workspace-from-20261026\\20261106\\\
+  02_\uC751\uC6A9\\data\\images\\train"
+val: "C:\\Users\\AHYOUNG\\NVIDIA_AI_CORE\\ai-academy-workspace-from-20261026\\20261106\\\
+  02_\uC751\uC6A9\\data\\images\\val"
