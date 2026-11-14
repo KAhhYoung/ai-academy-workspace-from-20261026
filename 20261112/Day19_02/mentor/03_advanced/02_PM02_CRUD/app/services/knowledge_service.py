@@ -36,7 +36,13 @@ def create_knowledge(db: Session, payload: KnowledgeWrite):
             item.category = category
             db.flush()
             item_id = item.id
+        # flush 상태만으로도 item_id 로 조회는 가능
         return repo.get_knowledge(db, item_id)
+    # 하위예외1) get_knowledge() 에서 raise KnowledgeNotFoundError()
+    # 하위예외2) transaction() 에서 예외를 잡았지만 같은 예외를 상위로 다시 전달(raise)
+    # IntegrityError: 모든 에러가 아니라, DB의 무결성 제약조건을 위반한 에러들을 받습니다.
+    # 하위예외1) 은 전역으로 전파됨
+    # 서비스에서 필요한 예외만 처리하고, 나머지는 상위로 전달하는 구조는 실무에서도 적절. 여기선 IntegrityError만 서비스에서 변환하고 나머지는 전파함
     except IntegrityError as exc:
         _raise_conflict(exc)
 

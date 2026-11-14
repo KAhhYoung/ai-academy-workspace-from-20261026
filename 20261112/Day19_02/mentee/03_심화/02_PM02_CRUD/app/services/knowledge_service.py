@@ -34,6 +34,7 @@ def create_knowledge(db: Session, payload: KnowledgeWrite):
 
 def update_knowledge(db: Session, knowledge_id: int, payload: KnowledgeWrite):
     # TODO H10: 존재 확인→분류 연결→세 필드 교체→commit 순서로 수정하세요.
+    raise NotImplementedError("TODO H10")
     
 
 def delete_knowledge(db: Session, knowledge_id: int):

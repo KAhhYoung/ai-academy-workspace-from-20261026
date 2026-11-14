@@ -10,7 +10,10 @@ def list_knowledge(db: Session, category: str | None = None) -> list[Knowledge]:
     return list(db.scalars(stmt).unique().all())
 
 def get_knowledge(db: Session, knowledge_id: int) -> Knowledge | None:
-    return db.scalar(select(Knowledge).options(joinedload(Knowledge.category)).where(Knowledge.id == knowledge_id))
+    # joinedload를 생략해도 Knowledge.category 관계는 유지됩니다. 관계는 모델의 relationship() 설정으로 정의되어 있음
+    # 다만, 생략하면 필요할 때 조회하는 지연 로딩
+    #return db.scalar(select(Knowledge).options(joinedload(Knowledge.category)).where(Knowledge.id == knowledge_id))
+    return db.scalar(select(Knowledge).where(Knowledge.id == knowledge_id))
 
 def get_or_create_category(db: Session, name: str) -> Category:
     category = db.scalar(select(Category).where(Category.name == name))
