@@ -26,3 +26,14 @@ def health():
         return {"status":"ok", "database":"reachable"}
     except OperationalError as exc:
         raise HTTPException(503, "Database unavailable") from exc
+
+    # ---------------------------
+    # OperationalError
+    #  DB에 연결하거나 DB 작업을 수행하는 과정에서 발생하는 운영상 오류. SQLAlchemy에서는 DB 드라이버가 보고한 오류를 이 예외로 감싸서 전달
+    #  대표적인 원인
+    #  - PostgreSQL 서버가 실행되지 않음
+    #  - 호스트나 포트가 잘못됨
+    #  - 사용자 이름이나 비밀번호가 잘못됨
+    #  - 접속하려는 DB가 존재하지 않음
+    #  - 작업 중 DB 연결이 끊어짐
+    # ---------------------------
