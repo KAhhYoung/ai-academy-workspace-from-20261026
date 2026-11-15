@@ -29,8 +29,17 @@ class ToyTokenizer:
         self.reverse={i:t for t,i in self.vocab.items()}
 
     def encode(self, text: str, max_length=None, padding_to=None):
+
+        # ----------------------------------
+        # 1. 시퀀스의 토큰화
+        # ----------------------------------
         raw=words(text)
         tokens=["[BOS]"]+raw+["[EOS]"]
+
+
+        # ----------------------------------
+        # 2. 토큰의 max_length 제한 검증
+        # ----------------------------------
         truncated=False
         if max_length is not None:
             if max_length<2: raise ValueError("BOS/EOS를 포함하려면 max_length>=2")
@@ -38,11 +47,28 @@ class ToyTokenizer:
                 tokens=tokens[:max_length-1]+["[EOS]"]
                 truncated=True
         valid=len(tokens)
+
+        # ----------------------------------
+        # 3. 가장 긴 시퀀스에 맞춰 padding 생성
+        # ----------------------------------
         if padding_to is not None:
             if padding_to<valid: raise ValueError("padding_to must be >= valid length")
             tokens=tokens+["[PAD]"]*(padding_to-valid)
+
+
+        # ----------------------------------
+        # 4. 토큰 ID 추출
+        # ----------------------------------
         ids=[self.vocab.get(t,self.vocab["[UNK]"]) for t in tokens]
+
+
+        # ----------------------------------
+        # 5. padding mask 생성
+        # padding_to is not None 인 경우에만 유효
+        # ----------------------------------
         mask=[0 if t=="[PAD]" else 1 for t in tokens]
+
+        # TODO: 엄밀히는 attention_mask 아니고 padding_mask 아니야?
         return {"tokens":tokens,"input_ids":ids,"attention_mask":mask,
                 "valid_length":valid,"truncated":truncated,"original_length":len(raw)+2}
 
@@ -66,9 +92,29 @@ def attention(q,k,v,causal=True):
     q=torch.as_tensor(q,dtype=torch.float32)
     k=torch.as_tensor(k,dtype=torch.float32)
     v=torch.as_tensor(v,dtype=torch.float32)
-    scores=q@k.T/math.sqrt(q.shape[-1])
+    # 벡터 차원의 제곱근으로 나누는 이유: 벡터 차원이 커질수록 내적 값이 커져, softmax가 지나치게 한쪽으로 쏠리는 것을 막기 위해서
+    # '제곱근'으로 나누는 이유: 내적 값의 표준편차가 차원의 제곱근 √(dₖ)에 비례하기 때문
+    scores=q@k.T/math.sqrt(q.shape[-1])     # shape=(3,3) / 행은 Query, 열은 Key
+
+    # ----------------------------------
+    # causal mask 생성 (가릴 곳을 True)
+    # torch.ones_like(scores, dtype=torch.bool): scores와 같은 크기·device로, 모든 값이 True인 텐서를 만듭니다.
+    # torch.triu(..., diagonal=1): 주대각선보다 한 칸 위부터 위쪽 영역을 남기고, 나머지는 False로 바꿉니다. triu는 upper triangular, 즉 상삼각 영역을 뜻함
+
+    #        참조할 토큰(Key)
+    #        0      1      2      3
+    # 현재 0  False  True   True   True
+    # 토큰 1  False  False  True   True
+    # (Q) 2  False  False  False  True
+    #     3  False  False  False  False
+    
+    # 1번 토큰은 자기 자신과 0번 토큰을 볼 수 있고, 미래인 2·3번 토큰은 가립니다. 자기 자신은 허용하므로 주대각선을 제외하는 diagonal=1을 사용
+    # ----------------------------------
     mask=torch.triu(torch.ones_like(scores,dtype=torch.bool),diagonal=1)
+
+    # dim=-1: key 방향. dim=-1이므로 각 행에서 Key들의 점수를 softmax로 변환
     weights=torch.softmax(scores.masked_fill(mask,float('-inf')) if causal else scores,dim=-1)
+    
     return scores,weights,weights@v,mask
 
 def write_json(path, data):
