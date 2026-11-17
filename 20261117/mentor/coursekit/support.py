@@ -70,6 +70,9 @@ def execute_case(args, case_id, *, stream=False, hooks=None, request_builder=bui
     if args.source=="live" and not args.allow_paid:
         return not_run(case_id,"실제 호출은 --allow-paid 확인 뒤 실행합니다")
     try:
+        # --------------------------------
+        # 비교할 모델 설정하는 부분 (read "models.json")
+        # -------------------------------
         settings=load_settings(args.source)
         model, reason=route(args.mode, settings.models)
         if case_id=="FIRST":
@@ -84,10 +87,19 @@ def execute_case(args, case_id, *, stream=False, hooks=None, request_builder=bui
         if changed:
             selected=deepcopy(selected)
             selected[0]["content"] += " 실행 환경도 함께 적습니다."
+            
+        # --------------------------------------
+        # 프롬프트 생성
+        # .contracts.py 의 make_request() 에서 WireAnswer 연결
+        # --------------------------------------
         request=request_builder(model,instructions,question,selected,structured=case_id!="FIRST")
         provided_ids={row["id"] for row in selected}
         prepared_ms=(time.perf_counter()-prepared_at)*1000
         active_policy=policy or (RetryPolicy(max_generations=1) if args.no_repair or case_id=="FIRST" else RetryPolicy())
+
+        # --------------------------------------
+        # LLM api 호출
+        # --------------------------------------
         result=run_request(request,provided_ids,source=args.source,settings=settings,case_id=case_id,
                            stream=stream,policy=active_policy,hooks=hooks)
         result.update(scope=settings.scope,route_reason=reason,selected_knowledge=selected)
@@ -162,6 +174,9 @@ def cache_lab(args, *, hooks=None, key_builder=cache_key, cache_reader=read_cach
 def daily_project(args, *, prepare_cases=None, hooks=None, make_table=table_rows, finish_summary=summarize_runs, policy=None):
     if args.action in {"reuse","changed"}:
         return cache_lab(args,hooks=hooks)
+    # ------------------------------
+    # 테스트 질문 지정
+    # ------------------------------
     case_ids=prepare_cases() if prepare_cases else ["H01","H02","H03"]
     if args.case:
         if args.case not in case_ids:

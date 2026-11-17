@@ -16,9 +16,19 @@ def receive_event(state, event, clock, started):
             state.error="stream_protocol_error"
             return
         if delta and state.first_text_ms is None:
+            # ----------------------------------
+            # TTFT 기록
+            # ----------------------------------
             state.first_text_ms=(clock()-started)*1000
         state.parts.append(delta)
         # END D22-03-A01
+    # --------------------------------------------
+    # 하나의 요청에 대한 정상적인 스트림에서는 종료 이벤트가 한 번만 와야 합니다. completed, incomplete, failed 중 하나로 끝나는 것입니다.
+    
+    # 1. 텍스트 조각 수신 중: state.parts에 텍스트를 누적하며, state.final은 None입니다.
+    # 2. 첫 종료 이벤트 수신: state.final이 None이므로 오류 없이 response를 저장합니다.
+    # 3. 두 번째 종료 이벤트 수신: 이미 state.final에 값이 있으므로 "duplicate_terminal_event" 오류를 기록합니다.
+    # --------------------------------------------
     elif kind in {"response.completed","response.incomplete","response.failed"}:
         # TODO D22-03-A02: 최종 이벤트의 Response를 보관하세요.
         # 입력·완료 기준: 부분 문자열을 합쳤다고 completed를 직접 만들어서는 안 됩니다.

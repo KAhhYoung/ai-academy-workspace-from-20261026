@@ -36,6 +36,8 @@ def load_settings(source, *, require_key=True):
         for key in ("OPENAI_API_KEY", "OPENAI_MODEL", "OPENAI_MODEL_QUALITY", "DAY22_SCOPE", "DAY22_MAX_LIVE_SENDS"):
             if key in os.environ:
                 env[key] = os.environ[key]  # OS 환경변수가 .env보다 우선합니다.
+    
+    
     profiles = read_json(ROOT / "config" / "models.json")
     fast = env.get("OPENAI_MODEL") or profiles["fast"]["model"]
     quality = env.get("OPENAI_MODEL_QUALITY") or (profiles["quality"]["model"] if source == "simulated" else None)

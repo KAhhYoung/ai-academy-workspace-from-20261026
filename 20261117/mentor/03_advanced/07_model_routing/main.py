@@ -14,3 +14,9 @@ if __name__=="__main__":
 # fast/quality는 수업 설정 이름입니다. quality가 항상 정확하다는 뜻이 아닙니다.
 # 모델 선택은 호출 전에 명시적으로 하며, 권한 오류를 숨기기 위해 다른 모델을 자동 호출하지 않습니다.
 # 비교할 때는 질문·문맥·출력 계약을 같게 하고 검증 및 사용량 기록 형식을 유지합니다.
+
+
+'''
+실행명령어: python main.py --source live --allow-paid --action compare
+--source live 로 실행할 때, .env 의 OPENAI_MODEL_QUALITY 주석해제해야 함
+'''

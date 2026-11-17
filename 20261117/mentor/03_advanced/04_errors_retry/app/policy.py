@@ -9,11 +9,15 @@ def classify(error):
     # 입력·완료 기준: 알 수 없는429는 무조건 재시도하지 않습니다. 실제로 제한을 유발하는 호출은 금지합니다.
     # BEGIN D22-04-A01
     # 해설: 알 수 없는429는 무조건 재시도하지 않습니다. 실제로 제한을 유발하는 호출은 금지합니다.
+    # -----------------------------
+    # LLM 이 응답한 에러코드에 대해 분기처리
+    # -----------------------------
     if error.status==401:
         return {"kind":"auth_error","retryable":False}
     if error.status==403:
         return {"kind":"permission_error","retryable":False}
     codes={error.code,error.error_type}
+    # &는 Python에서 두 집합의 교집합을 구하는 연산자
     if error.status==429 and codes & {"insufficient_quota","billing_hard_limit_reached","billing_not_active","usage_limit_reached"}:
         return {"kind":"quota_error","retryable":False}
     if error.status==429 and codes & {"rate_limit_exceeded","rate_limit_error","requests","tokens"}:

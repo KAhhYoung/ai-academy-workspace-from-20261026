@@ -7,6 +7,14 @@ from coursekit.support import parse_args, execute_case, emit
 from .contracts import make_request, response_gate, choose_cases, check_wire_schema
 HERE=Path(__file__).resolve().parents[1]
 
+# -----------------------------------
+# support.py - execute_case()
+# .contracts.py - make_request()
+# request.py - build_request() <-- Structured Output 설정
+
+# 
+# -----------------------------------
+
 def main():
     args=parse_args(HERE)
     cases=choose_cases()

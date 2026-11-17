@@ -34,9 +34,14 @@ def compare_context_keys():
     case,selected,instructions=input_parts("H01")
     model=load_settings("simulated").models["fast"]
     first=checkpoint_request(model,instructions,case["question"],selected)
+    # -----------------------------------
+    # 문맥(지식의 content) 변경: 캐시 재사용 안함을 테스트하기 위함
+    # -----------------------------------
     selected[0]["content"]+=" 실행 환경도 함께 적습니다."
     second=checkpoint_request(model,instructions,case["question"],selected)
     assert key_of(first,"classroom-demo") != key_of(second,"classroom-demo")
+
+    # new_api_send_count는 API를 실제로 호출하지 않아서(source_mode="simulated")
     return {"changed_context_miss":True,"source_mode":"simulated","new_api_send_count":0}
     # END D22-06-A03
 

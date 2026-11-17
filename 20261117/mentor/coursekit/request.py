@@ -40,6 +40,9 @@ def build_request(model, instructions, question, selected, *, structured=True):
         # 단가표 적용 대상을 명시합니다. Priority/Flex/Batch 비용과 섞지 않습니다.
         "service_tier": "default",
     }
+    # ------------------------------
+    # Structured Output 설정
+    # ------------------------------
     if structured:
         request["text"] = {"format": OUTPUT_FORMAT}
     return request

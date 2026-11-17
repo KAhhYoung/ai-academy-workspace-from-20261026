@@ -84,6 +84,9 @@ def run_request(request, provided_ids, *, source, settings, case_id, stream=Fals
     owned = client is None
     try:
         if client is None:
+            # -------------------------------
+            # LLM api 호출을 위한 클라이언트 생성
+            # -------------------------------
             client = make_client(settings, source, case_id)
     except SetupError as exc:
         return not_run(case_id, str(exc), request["model"])
@@ -149,6 +152,9 @@ def run_request(request, provided_ids, *, source, settings, case_id, stream=Fals
                         attempt["partial_text"] = "".join(state.parts)
                         attempt["first_text_ms"] = state.first_text_ms
                         error.kind = "stream_interrupted"
+                    # -------------------------------
+                    # LLM이 응답한 에러코드에 대해 분기처리
+                    # -------------------------------
                     classified = classify(error)
                     attempt.update(error=classified["kind"], http_status=error.status,
                                    request_id=error.request_id)
@@ -173,12 +179,22 @@ def run_request(request, provided_ids, *, source, settings, case_id, stream=Fals
                         attempt.update(cost)
                     if attempt["error"] is None:
                         validate_start = clock()
+                        # ---------------------------------------
+                        # llm 응답형식 체크
+                        # ---------------------------------------
                         report = validate_received(response, provided_ids, gate=gate, structured="text" in request)
                         attempt["validate_ms"] = round((clock()-validate_start)*1000,3)
                         attempt.update(raw=report["raw"],validation_error=report["validation_error"])
                 result["attempts"].append(attempt)
                 if error is not None:
                     result.update(run_status=attempt["error"], answer_object=None, validation_error=None)
+                    # ---------------------------------
+                    # 재시도 정책에 따른 처리 (retryable=True/False)
+                    # 1) 생성 최대2·생성별 전송최대2·전체 전송최대4를 설정
+                    #    RetryPolicy(max_generations=2,max_sends_per_generation=2,max_sends_total=4,elapsed_budget_s=60.0)
+                    # 2) SDK max_retries=0
+                    #    OpenAI(api_key=settings.api_key, base_url="https://api.openai.com/v1", timeout=settings.timeout_s, max_retries=0)
+                    # ---------------------------------
                     if not classified["retryable"] or transmission == policy.max_sends_per_generation:
                         result["stop_reason"] = "non_retryable" if not classified["retryable"] else "transport_limit"
                         break
