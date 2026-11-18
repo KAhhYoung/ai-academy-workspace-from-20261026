@@ -16,11 +16,23 @@ from app.knowledge import select_original, make_passage_input, make_mapping
 from app.validation import reject_duplicate_ids, reject_missing_fields, audit_versions
 
 
-
+'''
+postgreSQL 의 지식을 pgVector 에 적재하기 위한 사전 작업
+(지식원문을 가지고 접두어 붙이기까지. 임베딩 전!)
+'''
 def run(mode,level,args):
     rows=load_knowledge()
+    # ------------------------------
+    # 검색 대상을 선정
+    # ------------------------------
     selected=select_original(rows)
+    # ------------------------------
+    # 임베딩 입력을 구성
+    # ------------------------------
     passage=make_passage_input(selected[1])
+    # ------------------------------
+    # 기존 지식에 passage_input 추가로 연결하는 작업
+    # ------------------------------
     mapping=make_mapping(selected if level==1 else rows)
     result=dict(exercise=1,level=level,source_mode='local_snapshot',
                 selected_ids=[r['id'] for r in selected],example_passage=passage,

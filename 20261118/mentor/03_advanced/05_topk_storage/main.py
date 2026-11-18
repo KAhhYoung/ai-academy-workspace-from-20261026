@@ -23,6 +23,9 @@ from app.validation import check_search_options, check_id_vector_integrity
 def run(mode,level,args):
     rows=load_knowledge()
     sql_schema=schema_sql()
+    # ------------------------------
+    # 기존 문서 정보에 임베딩 모델에 넣을 텍스트(passage_input)를 추가
+    # ------------------------------
     inputs=prepare_document_rows(rows)
     sql_query=topk_sql()
     question='서버는 어디에서 실행하나요?'
@@ -32,19 +35,37 @@ def run(mode,level,args):
                 sql_schema=sql_schema,sql_topk=sql_query)
     category=None if level==1 else 'development'
     if level>=2:
+        # ---------------------
+        # cosine distance 가 작은(가까운) 순으로 top-k 개를 가져오는 쿼리 작성
+        # ---------------------
         result['sql_filtered']=filtered_sql()
         result['options']=check_search_options(3,category)
     if mode=='fixture':
         hits=fixture_search(question,3,category=category)
     else:
+        # --------------------
+        # E5 인코더 지정
+        # --------------------
         encoder=get_encoder('live')
+        # ----------------------
+        # passage_input 인코딩 수행
+        # ----------------------
         vectors=encode_passages(encoder,rows)
         if level>=3:check_id_vector_integrity(rows,vectors)
         else:validate_vectors(vectors,len(rows))
+        # -----------------------
+        # question 인코딩 수행
+        # -----------------------
         qvec=encode_question(encoder,question)
         with connect_db(Path(__file__).with_name('.env')) as conn:
             ensure_table(conn)
+            # ----------------------------
+            # postgreSQL day23_search_docs 에 지식원문과 임베딩벡터를 같이 저장
+            # ----------------------------
             upsert_rows(conn,rows,vectors,E5_MODEL_ID)
+            # ----------------------------
+            # 질문 임베딩과 코사인 거리가 가장 가까운 문서를 PostgreSQL에서 최대 k개 가져오는 함수
+            # ----------------------------
             hits=exact_topk(conn,qvec,k=3,category=category)
     result['hits']=[{'id':h['id'],'content':h['content'],'distance':round(h['distance'],6)} for h in hits]
     if level>=3:

@@ -44,8 +44,18 @@ class SimulatedEncoder:
         rows = load_knowledge(); lookups = {passage_text(r):r for r in rows}
         result = []
         for item in texts:
+            # -------------------------
+            # 지식 임베딩
+            # -------------------------
             if item in lookups:
+                # --------------------------
+                # doc_vector: 임베딩 벡터로 변환
+                # fixture_vec: 384차원으로 확장 및 벡터 정규화
+                # --------------------------
                 result.append(doc_vector(lookups[item]))
+            # ------------------------
+            # 질문 임베딩
+            # ------------------------
             elif item.startswith("query: "):
                 result.append(fixture_query(item[len("query: "):]))
             else:

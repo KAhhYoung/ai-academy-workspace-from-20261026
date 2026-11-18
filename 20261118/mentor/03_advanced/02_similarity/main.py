@@ -25,6 +25,9 @@ def run(mode,level,args):
                 cosine_distance=round(1-cosine(q,a),6))
     if level>=2:
         result['normalized_v']=normalize(v).round(6).tolist()
+        # --------------------------
+        # 같은 후보 벡터를 내적(Dot Product)과 코사인 유사도(Cosine Similarity)로 각각 순위를 매기는 함수
+        # --------------------------
         result['rankings']=rank_dot_vs_cosine(q,{'U':u,'V':v})
     if level>=3:
         result['validated']=validate_pair(q,a)

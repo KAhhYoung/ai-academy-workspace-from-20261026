@@ -13,9 +13,7 @@ def encode_both(encoder,passages,queries):
         결과: (doc_vectors, query_vectors). 기본필수의 모의 모드와
         --mode live의 E5 실측을 구분하여 같은 API를 사용합니다.
     """
-    # TODO D23-03-A03: 위 입력·출력 계약에 맞게 직접 구현합니다.
-    raise NotImplementedError("D23-03-A03: 직접 구현하세요")
-# END D23-03-A03
+    encoder.encode(passages)
 
 # BEGIN D23-03-A04
 def verify_alignment(rows,vectors):
