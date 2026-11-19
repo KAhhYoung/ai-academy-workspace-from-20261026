@@ -96,12 +96,20 @@ def fingerprint(records:list[dict])->str:
 
 
 def main():
-    rows=validate_manifest(load_json(DATA/'manifest.json'))
+    # manifest.json을 읽고 검증한 문서 목록을 rows에 저장
+    rows=validate_manifest (load_json(DATA/'manifest.json'))
+    # 다양한 형식의 문서를 원본바이트 크기로 읽음(수집)
     records=[collect_one(r) for r in rows]
+    #  상태별 건수를 집계하고 전체 건수와 일치하는지 확인한 뒤, 실패 목록을 포함한 보고서를 만듭니다.
     report=reconcile(records)
+    # 수집 결과 전체의 지문을 계산해 보고서에 저장
     report['fingerprint']=fingerprint(records)
+    # 같은 문서를 다시 수집해 지문이 처음과 같은지 확인하고, 결과를 True 또는 False로 저장
     report['repeat_equal']=fingerprint([collect_one(r) for r in rows])==report['fingerprint']
+    # 첫 번째 수집 결과를 복사하고 복사본의 raw_sha256 값을 0 64개로 바꿉니다.
     changed={**records[0],'raw_sha256':'0'*64}
+    # 첫 번째 수집 결과와 수정한 복사본을 비교해 결과를 보고서에 추가
     report['change_example']=compare_version(records[0],changed)
+    # 보고서를 collection_audit.json에 저장하고 파일 경로를 out에 담음
     out=save_json(HERE,'collection_audit.json',report)
     show_success('01 Advanced',out)

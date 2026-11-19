@@ -8,6 +8,9 @@ from coursekit.documents import by_doc,parse_one
 from coursekit.processing import clean_prose,char_windows,build_chunk,token_len
 
 
+# ---------------------------
+# 줄바꿈(\n) 기준으로 나눕니다. 빈 줄은 건너뛰고 각 줄의 시작·끝 문자 위치를 기록
+# ---------------------------
 def paragraph_spans(text:str)->list[dict]:
     # BEGIN D24-04-A01
     # 개념·실무 해설: Chunk Span은 본문의 Python 문자 Offset입니다. 바이트 위치나 Token ID가 아닙니다. 원문 구간을 그대로 슬라이스해야 역추적할 수 있습니다.

@@ -118,8 +118,11 @@ def publish_and_verify(conn,doc:dict,chunks:list[dict],model)->dict:
 def main():
     v1,c1=prepare_revision('DOC-ATTEND','v1')
     v2,c2=prepare_revision('DOC-ATTEND','v2')
-    report={'source_mode':'prepared_only_not_db','v1_chunks':len(c1),'v2_chunks':len(c2),
-            'db_status':'not_run'}
+    report={'source_mode':'prepared_only_not_db',
+            'v1_chunks':len(c1),
+            'v2_chunks':len(c2),
+            'db_status':'not_run'
+    }
     if '--live-db' in sys.argv:
         from coursekit.live import connect_db,load_encoder
         from coursekit.db import initialize,publish_version,use_schema

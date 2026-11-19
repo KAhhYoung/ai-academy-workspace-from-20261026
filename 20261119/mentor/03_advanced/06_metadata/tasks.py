@@ -85,12 +85,23 @@ def audit(rows:list[dict],pointers:dict,allowed:set[str],category:str)->dict:
     # 오류를 정상 성공으로 포장하지 않고 해당 원인에서 중단합니다.
     good=[];invalid=[]
     for r in rows:
+        # --------------------------
+        # 각 청크의 메타데이터 검사(필수 항목, 문자 범위, 페이지 번호 형식)
+        # 검사에 통과하면 stable_id()로 ID를 다시 계산하여, 저장된 chunk_id 와 비교
+        # --------------------------
         try:check_meta(r)
         except ValueError as exc:invalid.append({'chunk_id':r.get('chunk_id'),'reason':str(exc)})
+        # try-except-else에서 else는 try 블록이 예외 없이 끝났을 때만 실행
         else:
             if stable_id(r)!=r['chunk_id']:invalid.append({'chunk_id':r['chunk_id'],'reason':'unstable_identity'})
             else:good.append(r)
+    # ------------------------------
+    # 접근이 허용된 DOC-ATTEND만 남깁니다. 시설 문서는 여기서 제외됨
+    # ------------------------------
     accessible=restrict_allowed(good,allowed)
+    # ------------------------------
+    # 카테고리가 학사이고 원문 버전과 파이프라인 버전이 공개 설정 (v2, ingest-e5-v1)과 일치하는 청크를 고릅니다. 출석 문서 v1은 여기서 제외됨
+    # ------------------------------
     selected=select_published(accessible,pointers,category)
     return {'citations':citation_map(selected),'invalid':invalid,
             'excluded_permission':len(good)-len(accessible),
@@ -100,14 +111,32 @@ def audit(rows:list[dict],pointers:dict,allowed:set[str],category:str)->dict:
 
 def main():
     def make(docid,ver,category,citation):
-        r={'doc_id':docid,'source_version':ver,'pipeline_version':'ingest-e5-v1',
-           'unit_id':'sec-1','source_locator':f'{docid}.md#sec-1',
-           'category':category,'char_start':0,'char_end':12,'page_number':None,
-           'citation_id':citation}
+        r={
+           'doc_id':docid,
+           'source_version':ver,
+           'pipeline_version':'ingest-e5-v1',
+           'unit_id':'sec-1',
+           'source_locator':f'{docid}.md#sec-1',
+           'category':category,
+           'char_start':0,
+           'char_end':12,
+           'page_number':None,
+           'citation_id':citation
+        }
         return {**r,'chunk_id':stable_id(r)}
-    items=[make('DOC-ATTEND','v1','학사',201),make('DOC-ATTEND','v2','학사',202),
-           make('DOC-FACILITY','v1','시설',203)]
-    report=audit(items,{'DOC-ATTEND':('v2','ingest-e5-v1')},
-                 {'DOC-ATTEND'},'학사')
+    # ---------------------------------
+    # 청크를 나타내는 메타데이터 3건 생성
+    # ---------------------------------
+    items=[
+        make('DOC-ATTEND','v1','학사',201),
+        make('DOC-ATTEND','v2','학사',202),
+        make('DOC-FACILITY','v1','시설',203)
+    ]
+    report=audit(
+        items,
+        {'DOC-ATTEND':('v2','ingest-e5-v1')},
+        {'DOC-ATTEND'},
+        '학사'
+    )
     out=save_json(HERE,'metadata_audit.json',report)
     show_success('06 Advanced',out)

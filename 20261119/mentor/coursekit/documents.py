@@ -53,6 +53,9 @@ def parse_markdown_units(text: str, source_name: str) -> list[dict]:
              'raw_text':body} for i,(section_title,body) in enumerate(sections,1)]
 
 
+# -------------------------
+# 파싱 수행
+# -------------------------
 def parse_one(doc: dict) -> dict:
     """문서 1개를 파싱하고 출처 단위와 상태를 반환합니다.
 
@@ -60,10 +63,16 @@ def parse_one(doc: dict) -> dict:
     제작 시 이미지 PDF임을 알고 있으므로 해당 예제에 한해 needs_ocr 상태를 줍니다.
     """
     path = raw_path(doc)
+    # -------------------------------
+    # 문서리스트
+    # -------------------------------
     common = {k: doc[k] for k in ('doc_id','category','source_version')}
     common['source_uri'] = str(path.relative_to(DATA)).replace('\\','/')
     if not path.exists():
         return {'doc':common,'status':'not_found','units':[],'reason':'file_not_found'}
+    # -------------------------------
+    # 문서유형별 파싱 수행
+    # -------------------------------
     kind = path.suffix.lower()
     try:
         if kind == '.txt':

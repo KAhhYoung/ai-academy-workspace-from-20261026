@@ -77,6 +77,9 @@ def inspect_one(doc:dict)->dict:
     # 입력·출력은 함수 시그니처와 docstring에 따릅니다.
     # 이 블록은 예제를 따라 실행하며 검증 가능한 결과를 반환합니다.
     # 오류를 정상 성공으로 포장하지 않고 해당 원인에서 중단합니다.
+    # -----------------------
+    # 문서를 유형별로 파싱한 결과를 받음
+    # -----------------------
     result=dispatch(doc)
     check_pdf(doc,result);check_html(doc,result)
     status=empty_policy(doc,result)
@@ -98,6 +101,9 @@ def run_audit(rows:list[dict])->dict:
     if len(items)!=len(rows):raise ValueError('unprocessed input')
     repeat=[inspect_one(doc) for doc in rows]
     if items!=repeat:raise ValueError('non deterministic parsing')
+    # --------------------------
+    # 파싱 status 결과별 카운트
+    # --------------------------
     counts={s:sum(r['status']==s for r in items) for s in sorted({r['status'] for r in items})}
     return {'total':len(items),'status_counts':counts,'items':items,'repeat_equal':True}
     # END D24-02-A06

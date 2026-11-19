@@ -12,6 +12,9 @@ def clean_prose(text: str) -> str:
     return '\n'.join(re.sub(r'[ \t]+',' ',line).strip() for line in text.split('\n')).strip()
 
 
+# ---------------------------
+# 문자열을 최대 size자씩 자르고, 이웃한 조각이 overlap자만큼 겹치도록 합니다. 각 조각은 yield로 하나씩 내보냅니다
+# ---------------------------
 def char_windows(text: str, size: int, overlap: int):
     if type(size) is not int or type(overlap) is not int or not (0 <= overlap < size):
         raise ValueError('invalid chunk size or overlap')
@@ -43,8 +46,13 @@ def covered_positions(spans: list[tuple[int,int]], length: int) -> tuple[int,lis
 
 
 def stable_chunk_id(doc: dict, unit_id: str, pipeline_version: str, start: int, end: int) -> str:
-    identity={'doc_id':doc['doc_id'],'source_version':doc['source_version'],
-              'pipeline_version':pipeline_version,'unit_id':unit_id,'span':[start,end]}
+    identity={
+        'doc_id':doc['doc_id'],
+        'source_version':doc['source_version'],
+        'pipeline_version':pipeline_version,
+        'unit_id':unit_id,
+        'span':[start,end]
+    }
     raw=json.dumps(identity,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode('utf-8')
     return hashlib.sha256(raw).hexdigest()
 

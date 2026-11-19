@@ -87,8 +87,10 @@ def audit_unit(doc_id:str,unit:dict,source_version:str)->dict:
 
 def main():
     doc=by_doc('DOC-ATTEND');result=parse_one(doc)
+    #  파싱된 각 unit의 텍스트를 정제하고, 정제 결과와 검사 정보를 새 리스트 units에 모읍니다.
     units=[audit_unit(doc['doc_id'],u,doc['source_version']) for u in result['units']]
     corrupt='10분 초과는 결석.'.replace('10분','')
+    # check_critical: 원문에 있던 핵심 표현이 텍스트 정제 과정에서 사라졌는지 검사
     bad=check_critical('10분 초과는 결석.',corrupt,['10분'])
     if bad['passed']:raise AssertionError('must detect lost number')
     out=save_json(HERE,'cleaning_audit.json',{'units':units,'bad_rule':bad})
