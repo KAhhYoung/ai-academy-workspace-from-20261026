@@ -67,8 +67,11 @@ def make_prompt_input(question: str, context: str) -> dict[str, str]:
     # END D26-03-A04
 
 def main():
+    # 강의에서 다룬 네 구성요소의 출력 자료형을 대응
     outputs = component_outputs()
+    # 데이터를 읽는 경우와 invoke로 작업을 실행하는 경우를 구분
     access = access_kinds()
+    
     report = {
         "execution": execution_record("concept_review"),
         "components": [{"component": name, "input": value,
