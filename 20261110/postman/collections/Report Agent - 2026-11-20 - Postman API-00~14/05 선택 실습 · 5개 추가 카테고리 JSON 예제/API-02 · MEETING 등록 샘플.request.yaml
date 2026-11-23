@@ -1,0 +1,38 @@
+$kind: http-request
+description: MEETING 카테고리의 필수 Detail 값을 확인하는 독립 샘플 요청. 실제 DB에 한 행 생성합니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "MEETING",
+      "title": "검색 API 설계 회의록",
+      "author": "실습생",
+      "content": "오늘 회의에서는 검색 API의 반환값과 예외 처리 방식을 논의하였다. 가장 관련성이 높은 보고서 한 건 또는 미검색 결과를 반환하기로 결정하였다.",
+      "overview": "Keyword+Semantic Hybrid Search API의 요청과 반환 방식을 논의한 회의록",
+      "details": {
+        "meeting_at": "2026-11-20T10:30:00+09:00",
+        "attendees": "실습생, 강사",
+        "decisions": "유사한 보고서 1건 또는 not_found 반환"
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.environment.unset("optional_MEETING_id");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("optional_MEETING_id", j.report_id);
+      }
+    language: text/javascript
+order: 5000

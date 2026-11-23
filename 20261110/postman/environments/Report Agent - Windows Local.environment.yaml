@@ -1,0 +1,28 @@
+name: Report Agent | Windows Local
+values:
+  - key: base_url
+    value: 'http://127.0.0.1:8000'
+  - key: seed_report_id
+    value: '1'
+  - key: seed_prompt_report_id
+    value: '121'
+  - key: created_report_id
+    value: ''
+  - key: latest_prompt_version
+    value: ''
+  - key: allow_paid_llm
+    value: 'false'
+  - key: created_contract
+    value: ''
+  - key: updated_contract
+    value: ''
+  - key: optional_DAILY_WORK_id
+    value: ''
+  - key: optional_RESEARCH_PLAN_id
+    value: ''
+  - key: optional_DATA_PROCESSING_id
+    value: ''
+  - key: optional_PROMPT_id
+    value: ''
+  - key: optional_MEETING_id
+    value: ''

@@ -1,0 +1,11 @@
+$kind: http-request
+name: "입력 오류: 존재하지 않는 ID 404"
+url: "{{base_url}}/api/v1/reports/999999999999"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=404;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+    language: text/javascript
+order: 2000

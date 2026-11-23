@@ -1,0 +1,38 @@
+$kind: http-request
+description: 기본 seed_catalog와 search_cases의 가중치 기대 범주에 해당하는 ID 집합, 또는 이번 실행에서 생성·수정한 관련 보고서를 허용합니다. ID 1 한 건이나 정확한 cosine 수치로 채점하지 않습니다.
+url: "{{base_url}}/api/v1/search/similar"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "query": "가중치",
+      "category_code": null,
+      "keyword_limit": 20,
+      "semantic_limit": 20
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 200", () => pm.response.to.have.status(200));
+      const j = pm.response.json();
+      // common/data/seed_catalog.json과 search_cases.json의 가중치 기준에서 추출한 집합입니다.
+      const acceptedIds = [1, 7, 14, 137, 152];
+      const expectedCategories = ["EXPERIMENT", "PROMPT", "MEETING"];
+      const current = JSON.parse(pm.environment.get("updated_contract") || pm.environment.get("created_contract") || "null");
+      if (current && expectedCategories.includes(current.category_code) &&
+          ["title", "overview", "content"].some(key => String(current[key] || "").includes("가중치"))) {
+        const currentId = Number(pm.environment.get("created_report_id"));
+        if (Number.isSafeInteger(currentId) && currentId > 180) acceptedIds.push(currentId);
+      }
+      pm.test("가중치 관련 보고서 1건", () => {
+        pm.expect(j.status).to.eql("found");
+        pm.expect(j.best_match).to.be.an("object");
+        pm.expect(acceptedIds).to.include(j.best_match.report_id);
+        pm.expect(expectedCategories).to.include(j.best_match.category_code);
+        pm.expect(j.best_match.keyword_match).to.eql(true);
+      });
+    language: text/javascript
+order: 9000

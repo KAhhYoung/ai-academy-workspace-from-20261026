@@ -1,0 +1,30 @@
+$kind: http-request
+description: 자동 검사는 응답 형식만 확인합니다. 실제 의미 판정은 common/data/search_cases.json과 POSTMAN_GUIDE.md의 T-05/T-06 절차에 따라 결과·임계값을 기록합니다. found라고 무조건 합격하거나, 특정 cosine 값을 정답으로 고정하지 않습니다.
+url: "{{base_url}}/api/v1/search/similar"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "query": "화성의 낙타 전용 미용실",
+      "category_code": null,
+      "keyword_limit": 20,
+      "semantic_limit": 20
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 200", () => pm.response.to.have.status(200));
+      const j = pm.response.json();
+      pm.test("무관 질의의 응답 형식 (의미 판정은 별도)", () => {
+        pm.expect(["found", "not_found"]).to.include(j.status);
+        if (j.status === "not_found") pm.expect(j.best_match).to.eql(null);
+        else {
+          pm.expect(j.best_match).to.be.an("object");
+          pm.expect(j.best_match.report_id).to.be.above(0);
+        }
+      });
+    language: text/javascript
+order: 10000

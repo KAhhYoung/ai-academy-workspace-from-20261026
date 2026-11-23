@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports?category_code=EXPERIMENT&updated_after=2026-11-01T00%3A00%3A00Z&limit=20&offset=0"
+method: GET
+queryParams:
+  category_code: EXPERIMENT
+  updated_after: 2026-11-01T00%3A00%3A00Z
+  limit: "20"
+  offset: "0"
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+    language: text/javascript
+order: 1000

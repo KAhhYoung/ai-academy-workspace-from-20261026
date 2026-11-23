@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/agent/runs?limit=20&offset=0&status=completed"
+method: GET
+queryParams:
+  limit: "20"
+  offset: "0"
+  status: completed
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+    language: text/javascript
+order: 3000

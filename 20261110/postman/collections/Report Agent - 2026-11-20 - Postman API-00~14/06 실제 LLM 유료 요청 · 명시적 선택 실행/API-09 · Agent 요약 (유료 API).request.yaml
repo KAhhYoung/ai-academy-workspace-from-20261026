@@ -1,0 +1,28 @@
+$kind: http-request
+description: 실제 LLM 유료 호출입니다.
+url: "{{base_url}}/api/v1/agent/run"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "action": "summarize_report",
+      "report_id": 1
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("Agent LLM 요약",()=>pm.expect(pm.response.json().tool_calls).to.include("summarize_report"));
+    language: text/javascript
+  - type: beforeRequest
+    code: |-
+      // Environment에서 명시적으로 true를 설정한 경우에만 유료 요청을 보냅니다.
+      if (pm.environment.get("allow_paid_llm") !== "true") {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+order: 2000

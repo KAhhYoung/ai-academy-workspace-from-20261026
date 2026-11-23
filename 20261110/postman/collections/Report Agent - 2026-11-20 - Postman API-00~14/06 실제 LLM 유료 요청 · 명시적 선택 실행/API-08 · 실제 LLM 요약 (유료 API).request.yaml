@@ -1,0 +1,33 @@
+$kind: http-request
+description: 실제 LLM 유료 호출입니다. 비용·API 키·모델을 확인한 뒤 수동으로 실행하세요.
+url: "{{base_url}}/api/v1/reports/{{created_report_id}}/summarize"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "style": "brief",
+      "max_sentences": 3
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("실제 LLM 요약",()=>{let j=pm.response.json();pm.expect(j.status).to.eql("completed");pm.expect(j.summary).to.be.a("string");});
+    language: text/javascript
+  - type: beforeRequest
+    code: |-
+      // Environment에서 명시적으로 true를 설정한 경우에만 유료 요청을 보냅니다.
+      if (pm.environment.get("allow_paid_llm") !== "true") {
+        pm.execution.skipRequest();
+      }
+      const generatedId = Number(pm.environment.get("created_report_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+order: 1000

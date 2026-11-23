@@ -1,0 +1,37 @@
+$kind: http-request
+description: PROMPT 카테고리의 필수 Detail 값을 확인하는 독립 샘플 요청. 실제 DB에 한 행 생성합니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "PROMPT",
+      "title": "요약 작업을 위한 Prompt",
+      "author": "실습생",
+      "content": "보고서 원문에서 목적과 결과만 근거 기반으로 요약하세요.",
+      "overview": "보고서 전체 본문을 안전하게 요약하는 프롬프트 정의와 버전 관리 예제",
+      "details": {
+        "purpose": "보고서 요약",
+        "prompt_text": "보고서 원문에서 목적과 결과만 근거 기반으로 요약하세요."
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.environment.unset("optional_PROMPT_id");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("optional_PROMPT_id", j.report_id);
+      }
+    language: text/javascript
+order: 4000

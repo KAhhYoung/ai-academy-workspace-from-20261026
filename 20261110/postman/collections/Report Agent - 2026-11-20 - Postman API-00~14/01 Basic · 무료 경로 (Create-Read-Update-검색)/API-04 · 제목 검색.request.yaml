@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports?title=%EA%B0%80%EC%A4%91%EC%B9%98&limit=20&offset=0"
+method: GET
+queryParams:
+  title: "%EA%B0%80%EC%A4%91%EC%B9%98"
+  limit: "20"
+  offset: "0"
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("items 배열/total",()=>{let j=pm.response.json();pm.expect(j.items).to.be.an("array");pm.expect(j.total).to.be.a("number");});
+    language: text/javascript
+order: 4000

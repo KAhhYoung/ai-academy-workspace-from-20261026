@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/agent/run"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "action": "find_report",
+      "query": "가중치"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("Tool Call 존재",()=>pm.expect(pm.response.json().tool_calls).to.include("find_similar_report"));
+    language: text/javascript
+order: 12000

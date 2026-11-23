@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/prompts/{{seed_prompt_report_id}}/versions"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "prompt_text": "가중치 실험 보고서에서 목적, 실험 조건, 주요 결과, 한계를 근거 중심으로 추출하세요."
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=201;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      const j=pm.response.json();pm.environment.set("latest_prompt_version",j.version_no);pm.test("활성 버전 아님",()=>pm.expect(j.active).to.eql(false));
+    language: text/javascript
+order: 2000

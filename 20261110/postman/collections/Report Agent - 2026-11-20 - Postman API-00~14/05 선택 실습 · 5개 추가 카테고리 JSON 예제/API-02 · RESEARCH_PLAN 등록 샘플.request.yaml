@@ -1,0 +1,38 @@
+$kind: http-request
+description: RESEARCH_PLAN 카테고리의 필수 Detail 값을 확인하는 독립 샘플 요청. 실제 DB에 한 행 생성합니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "RESEARCH_PLAN",
+      "title": "Agent 검색 품질 개선 연구 계획",
+      "author": "실습생",
+      "content": "의미 기반 검색 결과의 적중률을 개선하기 위한 연구 계획이다. 질문·정답 집합을 수집하고 기존 기준선과 비교한다. 오류 사례를 분류하여 후속 실험의 우선순위를 정한다.",
+      "overview": "Agent 보고서 검색에서 관련성 임계값과 Top-k 성능을 연구하는 계획서",
+      "details": {
+        "research_goal": "검색 품질 개선",
+        "methodology": "관련·무관 질의 비교",
+        "target_date": "2026-12-18"
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.environment.unset("optional_RESEARCH_PLAN_id");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("optional_RESEARCH_PLAN_id", j.report_id);
+      }
+    language: text/javascript
+order: 2000

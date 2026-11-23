@@ -1,0 +1,45 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{created_report_id}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "가중치 실험 Postman 수정 완료",
+      "author": "실습생",
+      "content": "새로운 검증 결과를 반영하였다. 학습 데이터의 클래스 수 분포를 점검한 후 Macro-F1을 다시 계산하였다. 이전 실험과 조건을 맞추어 재현성을 확인했다.",
+      "overview": "수정된 실험: 클래스 불균형 가중치 변경 후 Macro-F1을 다시 비교하고 검증한 보고서",
+      "details": {
+        "experiment_date": "2026-11-20",
+        "hypothesis": "재현율 개선 여부 재검증",
+        "result_summary": "조건 일치 후 Macro-F1 비교 완료"
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const generatedId = Number(pm.environment.get("created_report_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+      pm.environment.unset("updated_contract");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 200", () => pm.response.to.have.status(200));
+      const j = pm.response.json();
+      pm.test("동일 ID의 revision 증가와 ready", () => {
+        pm.expect(j.report_id).to.eql(Number(pm.environment.get("created_report_id")));
+        pm.expect(j.revision).to.be.above(1);
+        pm.expect(j.index_status).to.eql("ready");
+      });
+      if (pm.response.code === 200) {
+        const before = JSON.parse(pm.environment.get("created_contract") || "{}");
+        const sent = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));
+        pm.environment.set("updated_contract", JSON.stringify({...sent, category_code: before.category_code}));
+      }
+    language: text/javascript
+order: 7000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/categories"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("카테고리 6개",()=>pm.expect(pm.response.json().items).to.have.length(6));
+    language: text/javascript
+order: 2000

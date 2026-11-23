@@ -1,0 +1,43 @@
+$kind: http-request
+description: 이 요청을 먼저 실행해야 이후 {{created_report_id}} 변수가 생깁니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "EXPERIMENT",
+      "title": "가중치 적용 모델 실험 Postman 신규 보고서",
+      "author": "실습생",
+      "content": "모델에 클래스 가중치를 적용한 전후의 성능을 비교하였다. 동일한 데이터 분할을 사용하여 조건을 통일하고 Macro-F1과 소수 클래스 재현율의 차이를 관찰했다. 결과는 검증표로 기록하였다.",
+      "overview": "가중치 적용에 따른 분류 성능 변화 및 소수 클래스 재현율을 비교하는 Postman 검증 보고서",
+      "details": {
+        "experiment_date": "2026-11-20",
+        "hypothesis": "가중치를 부여하면 소수 클래스 Recall이 향상될 수 있다.",
+        "result_summary": "동일 분할과 Seed에서 가중치 적용 전후를 비교하였다."
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      pm.environment.unset("created_report_id");
+      pm.environment.unset("created_contract");
+      pm.environment.unset("updated_contract");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID와 ready", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+        pm.expect(j.index_status).to.eql("ready");
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("created_report_id", j.report_id);
+        pm.environment.set("created_contract", pm.variables.replaceIn(pm.request.body.raw));
+      }
+    language: text/javascript
+order: 5000

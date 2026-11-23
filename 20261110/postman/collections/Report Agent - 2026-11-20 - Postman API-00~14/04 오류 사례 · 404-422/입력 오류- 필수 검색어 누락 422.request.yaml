@@ -1,0 +1,19 @@
+$kind: http-request
+name: "입력 오류: 필수 검색어 누락 422"
+url: "{{base_url}}/api/v1/search/similar"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "query": "   "
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=422;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+    language: text/javascript
+order: 4000

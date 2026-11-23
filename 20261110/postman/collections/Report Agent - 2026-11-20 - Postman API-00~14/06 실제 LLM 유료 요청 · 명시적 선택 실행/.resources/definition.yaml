@@ -1,0 +1,3 @@
+$kind: collection
+description: 기본 allow_paid_llm=false이므로 Runner에서 건너뜁니다. 본인 레벨에 맞는 요청만 고르고 true로 설정한 뒤 수동 실행하세요. Basic 생성 데이터 정리 전에 실행합니다.
+order: 6000

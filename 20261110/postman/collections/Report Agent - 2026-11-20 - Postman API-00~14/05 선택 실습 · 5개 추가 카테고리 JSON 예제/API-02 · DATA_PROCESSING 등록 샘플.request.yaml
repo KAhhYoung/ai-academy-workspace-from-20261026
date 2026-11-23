@@ -1,0 +1,38 @@
+$kind: http-request
+description: DATA_PROCESSING 카테고리의 필수 Detail 값을 확인하는 독립 샘플 요청. 실제 DB에 한 행 생성합니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "DATA_PROCESSING",
+      "title": "결측치 처리 과정 기록",
+      "author": "실습생",
+      "content": "입력 테이블의 누락된 수치값을 확인한 뒤 중앙값 대체를 실행하였다. 작업 전후 결측 건수와 평균값을 비교하여 처리 오류가 없는지 검증하였다.",
+      "overview": "결측치 대체와 데이터 정제 전후 품질 변화를 비교한 데이터 처리 보고서",
+      "details": {
+        "dataset_name": "request_metrics.csv",
+        "processing_steps": "결측 검사→중앙값 대체→범위 검증",
+        "quality_notes": ""
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.environment.unset("optional_DATA_PROCESSING_id");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("optional_DATA_PROCESSING_id", j.report_id);
+      }
+    language: text/javascript
+order: 3000

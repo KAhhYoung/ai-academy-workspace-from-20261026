@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{created_report_id}}"
+method: DELETE
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=204;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("204 No Content",()=>pm.expect(pm.response.text()).to.eql(""));
+    language: text/javascript
+  - type: beforeRequest
+    code: |-
+      const generatedId = Number(pm.environment.get("created_report_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+order: 1000

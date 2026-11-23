@@ -1,0 +1,12 @@
+$kind: http-request
+description: DB/pgvector 미설치 시 503이 정상적인 실패 결과입니다.
+url: "{{base_url}}/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("DB와 pgvector 준비",()=>{ const j=pm.response.json();pm.expect(j.db).to.eql("ready");pm.expect(j.vector).to.eql("ready");});
+    language: text/javascript
+order: 1000

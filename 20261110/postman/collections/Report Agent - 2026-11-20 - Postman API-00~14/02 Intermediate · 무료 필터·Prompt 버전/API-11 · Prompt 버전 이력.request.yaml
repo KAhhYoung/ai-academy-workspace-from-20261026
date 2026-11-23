@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/prompts/{{seed_prompt_report_id}}/versions"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("version 목록",()=>{let j=pm.response.json();pm.expect(j.items).to.be.an("array");pm.expect(j.active_version_no).to.be.a("number");});
+    language: text/javascript
+order: 3000

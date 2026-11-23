@@ -1,0 +1,36 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{created_report_id}}"
+method: GET
+scripts:
+  - type: beforeRequest
+    code: |-
+      const generatedId = Number(pm.environment.get("created_report_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 200", () => pm.response.to.have.status(200));
+      const j = pm.response.json();
+      const expected = JSON.parse(pm.environment.get("created_contract") || "null");
+      pm.test("생성 입력값과 재조회 일치", () => {
+        pm.expect(expected, "먼저 앞의 생성/수정 요청을 성공시키세요").to.be.an("object");
+        pm.expect(j.report_id).to.eql(Number(pm.environment.get("created_report_id")));
+        ["category_code", "title", "author", "content", "overview"].forEach(key => {
+          pm.expect(j[key], key).to.eql(expected[key]);
+        });
+        pm.expect(j.details, "details").to.deep.eql(expected.details);
+      });
+      pm.test("UTC 시각과 ready 상태", () => {
+        ["created_at", "updated_at"].forEach(key => {
+          pm.expect(typeof j[key], key).to.eql("string");
+          pm.expect(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$/.test(j[key]), key + " UTC ISO 8601").to.eql(true);
+          pm.expect(Number.isNaN(Date.parse(j[key])), key + " ISO 시각").to.eql(false);
+        });
+        pm.expect(Date.parse(j.updated_at)).to.be.at.least(Date.parse(j.created_at));
+        pm.expect(j.index_status).to.eql("ready");
+      });
+    language: text/javascript
+order: 6000

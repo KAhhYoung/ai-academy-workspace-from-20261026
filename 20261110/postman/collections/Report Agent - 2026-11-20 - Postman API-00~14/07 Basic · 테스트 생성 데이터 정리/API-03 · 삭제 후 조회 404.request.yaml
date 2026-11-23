@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{created_report_id}}"
+method: GET
+scripts:
+  - type: beforeRequest
+    code: |-
+      const generatedId = Number(pm.environment.get("created_report_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 404", () => pm.response.to.have.status(404));
+      pm.test("삭제 후 404", () => pm.expect(pm.response.json().error.code).to.eql("REPORT_NOT_FOUND"));
+      if (pm.response.code === 404) {
+        pm.environment.unset("created_report_id");
+        pm.environment.unset("created_contract");
+        pm.environment.unset("updated_contract");
+      }
+    language: text/javascript
+order: 2000

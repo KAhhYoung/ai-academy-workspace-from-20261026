@@ -1,0 +1,20 @@
+$kind: http-request
+description: 이번 선택 등록에서 저장한 ID만 사용합니다. ID가 없거나 초기 시드 ID이면 요청을 건너뜁니다.
+url: "{{base_url}}/api/v1/reports/{{optional_PROMPT_id}}"
+method: DELETE
+scripts:
+  - type: beforeRequest
+    code: |-
+      const generatedId = Number(pm.environment.get("optional_PROMPT_id"));
+      // 초기 시드 ID 1~180은 이 정리/생성 결과 흐름에서 사용하지 않습니다.
+      if (!Number.isSafeInteger(generatedId) || generatedId <= 180) {
+        pm.execution.skipRequest();
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 204", () => pm.response.to.have.status(204));
+      pm.test("204 No Content", () => pm.expect(pm.response.text()).to.eql(""));
+      if (pm.response.code === 204) pm.environment.unset("optional_PROMPT_id");
+    language: text/javascript
+order: 4000

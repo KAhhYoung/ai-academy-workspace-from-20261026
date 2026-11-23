@@ -1,0 +1,9 @@
+$kind: collection
+name: Report Agent | 2026-11-20 | Postman API-00~14
+description: SRS v1.4 계약 검증. Basic은 01·04·07 폴더, Intermediate는 02, Advanced는 03을 추가합니다. 05·08은 선택 카테고리 등록·정리입니다. 06의 유료 5개 요청은 allow_paid_llm=false일 때 건너뜁니다. 자동 테스트 외에 verify.sql과 검색 평가셋으로 실제 저장·검색 의미를 확인하세요.
+variables:
+  base_url: http://127.0.0.1:8000
+  seed_report_id: "1"
+  seed_prompt_report_id: "121"
+  created_report_id: ""
+  latest_prompt_version: ""

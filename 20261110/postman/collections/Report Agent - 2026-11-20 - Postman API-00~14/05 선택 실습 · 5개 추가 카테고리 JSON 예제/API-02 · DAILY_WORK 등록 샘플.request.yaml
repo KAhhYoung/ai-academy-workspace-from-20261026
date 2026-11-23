@@ -1,0 +1,38 @@
+$kind: http-request
+description: DAILY_WORK 카테고리의 필수 Detail 값을 확인하는 독립 샘플 요청. 실제 DB에 한 행 생성합니다.
+url: "{{base_url}}/api/v1/reports"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category_code": "DAILY_WORK",
+      "title": "주간 업무 Postman 입력",
+      "author": "실습생",
+      "content": "금일에는 FastAPI 서비스 환경을 점검하고 PostgreSQL 쿼리를 작성했다. API 검증에서 발견한 오류를 기록하고 내일 해결할 항목을 정리했다.",
+      "overview": "FastAPI 및 PostgreSQL 데이터 연결과 Postman 검증 결과를 정리한 일일 업무 보고서",
+      "details": {
+        "work_date": "2026-11-20",
+        "progress": "DB 연결 및 CRUD 목록 확인 완료",
+        "blockers": ""
+      }
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.environment.unset("optional_DAILY_WORK_id");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("HTTP 201", () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      pm.test("새 보고서 ID", () => {
+        pm.expect(Number.isSafeInteger(j.report_id)).to.eql(true);
+        pm.expect(j.report_id).to.be.above(180);
+      });
+      if (pm.response.code === 201 && Number.isSafeInteger(j.report_id) && j.report_id > 180) {
+        pm.environment.set("optional_DAILY_WORK_id", j.report_id);
+      }
+    language: text/javascript
+order: 1000

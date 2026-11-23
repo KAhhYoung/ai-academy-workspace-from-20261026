@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{seed_report_id}}/reindex"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "force": true
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+    language: text/javascript
+order: 2000

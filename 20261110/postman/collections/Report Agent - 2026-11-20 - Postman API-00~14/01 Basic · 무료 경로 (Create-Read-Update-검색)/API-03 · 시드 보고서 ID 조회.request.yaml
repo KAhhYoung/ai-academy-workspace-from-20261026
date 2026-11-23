@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/reports/{{seed_report_id}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      const EXPECTED=200;
+      pm.test("HTTP 상태 확인", function(){pm.response.to.have.status(EXPECTED);});
+      pm.test("보고서에 title/author/content",()=>{let j=pm.response.json();pm.expect(j).to.have.all.keys("report_id","category_code","title","content","author","overview","details","revision","index_status","created_at","updated_at");});
+    language: text/javascript
+order: 3000
