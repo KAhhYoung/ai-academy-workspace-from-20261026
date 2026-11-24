@@ -40,6 +40,8 @@ def run_02(offline,fns):
     from coursekit.rewrite import rewrite_query
     from coursekit.fixtures import get_question
     f1,f2,*more=fns
+    # Q02: "그럼 취소는 어떻게 해?" / history (O)
+    # Q04: "예약 시간을 바꾸고 싶은데?" / history (O)
     questions=[get_question('Q02'),get_question('Q04'),
                {'id':'Q-ambiguous','question':'그거는 어떻게 해?','category':'시설','history':[]}]
     rows=[]
@@ -58,6 +60,7 @@ def run_03(offline,fns):
     from coursekit.fixtures import fixture_search,get_question
     from coursekit.live import make_live_search
     f1,f2,*more=fns
+    # Q01: "회의실 예약을 취소하는 방법은?"
     case=get_question('Q01')
     base=case['question']
     if offline:extras=['회의실 예약 철회는 어떻게 하나요?','회의실 예약 취소 조건은?','회의실 사용 후 청소']
@@ -65,8 +68,13 @@ def run_03(offline,fns):
         from coursekit.config import require_cuda
         require_cuda()  # 불필요한 유료 LLM 호출 전에 GPU 환경 확인
         from coursekit.multi_query import generate_queries_live
+
+        # 멀티쿼리 생성
         extras=generate_queries_live(base)
     queries=f1(base,extras)
+    # 질문을 받아 실제 DB에서 검색하는 함수 search를 만들어 반환
+    # 1) make_live_search(): E5 모델을 준비하고 검색 함수를 받음
+    # 2) search(): 질문에 query: 를 붙여 E5로 벡터를 만들고, PostgreSQL의 pgvector는 그 벡터를 DB에 저장된 문서 청크 벡터와 비교해 가까운 청크를 찾습니다.
     search=fixture_search if offline else make_live_search()
     pairs,errors=[],[]
     for q in queries:
@@ -93,6 +101,7 @@ def run_04(offline,fns):
     from coursekit.live import make_live_search
     from langchain_core.runnables import RunnableLambda
     f1,f2,*more=fns
+    # Q01: "회의실 예약을 취소하는 방법은?"
     case=get_question('Q01')
     payload=f1(case)
     search=fixture_search if offline else make_live_search()
@@ -111,11 +120,16 @@ def run_05(offline,fns):
     from coursekit.live import make_live_search
     from coursekit.reranking import live_scorer
     f1,f2,*more=fns
+    # Q01: "회의실 예약을 취소하는 방법은?"
     case=get_question('Q01')
     # 고정 순위 시연: 의도적으로 정답 청크가 초기 Top-2 밖에 있는 Fixture.
     search=(lambda q,c,k,role:fixture_search(q,c,k,role,question_id=case['id'])) if offline else make_live_search()
+    
+    # candidate_k 추리기
     docs=search(case['question'],case['category'],5,'learner')
     pairs=f1(case['question'],docs)
+
+    # score 산출하여 re-rank 하기 
     scorer=(lambda items:fixed_rank_scores(case['question'],docs)) if offline else live_scorer
     ranked=f2(case['question'],docs,scorer)
     row={'pairs':pairs[:2], 'before_ids':[d.metadata['chunk_id'] for d in docs],
@@ -131,7 +145,10 @@ def run_06(offline,fns):
     from coursekit.fixtures import get_question
     from coursekit.runtime import create_dependencies
     f1,f2,*more=fns
+    # Q02: "그럼 취소는 어떻게 해?"
     case=get_question('Q02')
+
+    # rewrite, rerank 는 사용하나 multiquery 는 사용안함
     req=f1(case)
     dependencies=create_dependencies(offline)
     chain=f2(dependencies,offline)
@@ -150,8 +167,12 @@ def run_07(offline,fns):
     from coursekit.reranking import rerank_documents,live_scorer
     from coursekit.evaluation import time_stage
     f1,f2,*more=fns
+    # Q01: "회의실 예약을 취소하는 방법
+    # lambda 목적: question_id만 미리 정해두고, 나머지 인자 4개는 나중에 받을 검색 함수를 만드는 것
+    # 이렇게 하면 나중에 search("예약 취소 방법은?", "시설", 5, "leqarner")를 호출할 때, 받은 인자 4개에 question_id=case['id']를 덧붙여 fixture_search()를 실행함.
     case=get_question('Q01')
     search=(lambda q,c,k,role:fixture_search(q,c,k,role,question_id=case['id'])) if offline else make_live_search()
+    # lambda 목적: search 에 필요한 인자를 전달하기 위해
     docs,search_ms=time_stage(lambda:search(case['question'],case['category'],5,'learner'),cuda=False)
     scorer=(lambda pairs:fixed_rank_scores(case['question'],docs)) if offline else live_scorer
     ranked,rerank_ms=time_stage(lambda:rerank_documents(case['question'],docs,scorer,top_n=5),cuda=not offline)

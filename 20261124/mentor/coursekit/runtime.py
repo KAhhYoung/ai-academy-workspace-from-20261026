@@ -24,6 +24,9 @@ def create_dependencies(offline=False):
     generation=create_generation()
     def rewrite(q,h):return rewrite_query(q,h,chain=rewrite_chain)
     def rerank(q,docs,k):return rerank_documents(q,docs,lambda pairs:live_scorer(pairs),top_n=k)
+    
+    # lambda q, ctx: generation.invoke(...): 함수 하나를 만듦. 그 함수를 generate(q, ctx)처럼 호출하면, 질문 q와 검색으로 모은 근거 ctx를 LLM에
+    # 보내 '근거를 바탕으로 작성한 답변'을 받아옴
     return rewrite,search,rerank,lambda q,ctx:generation.invoke({'question':q,'context':ctx})
 
 

@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--offline',action='store_true',help='교육용 고정 데이터·점수. 모델 품질 실측이 아닙니다.')
     args=parser.parse_args()
     # Day27: 일부 진단 실습 외에는 기본 실행이 실제 모델·DB·LLM 경로입니다.
+    # candidate_k, context_k, category 등 지정
     report=STAGE_RUNNERS[4](args.offline,[make_candidate_request,fetch_documents,metadata_check,policy_check])
     path=save_report(HERE,'day27_04_'+('fixture' if args.offline else 'live')+'.json',report)
     print('실습 04 결과:', path)

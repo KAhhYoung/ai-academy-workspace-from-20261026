@@ -16,6 +16,7 @@ def create_rag_pipeline(rewrite_fn,search_fn,rank_fn,generation_fn,
     """Dependency Injection: mock / real 모델의 실행 경로를 명시적으로 선택합니다."""
     from langchain_core.runnables import RunnableLambda
     def run(name,fn):
+        # 직전 반환값을 받는 fn의 RunnableLambda 객체를 반환
         def wrapped(state):
             start=perf_counter()
             try:
@@ -37,8 +38,18 @@ def create_rag_pipeline(rewrite_fn,search_fn,rank_fn,generation_fn,
         trusted_role=req.get('trusted_role','learner')
         req=RagRequest.model_validate({k:v for k,v in req.items() if k!='trusted_role'}).model_dump()
         # principal role은 사용자 JSON에 넣지 않습니다. 인증된 서버 코드가 지정합니다.
-        return dict(req, trusted_role=trusted_role, search_query=req['query'],queries=[], candidates=[],ranked=[],
-                    included=[],context='',status='running',timing_ms={},source_mode='offline_fixture' if offline else 'live')
+        return dict(req,
+                    trusted_role=trusted_role,
+                    search_query=req['query'],
+                    queries=[],
+                    candidates=[],
+                    ranked=[],
+                    included=[],
+                    context='',
+                    status='running',
+                    timing_ms={},
+                    source_mode='offline_fixture' if offline else 'live'
+        )
 
     def rewrite(s):
         if not s['use_rewrite']:return s
@@ -56,6 +67,7 @@ def create_rag_pipeline(rewrite_fn,search_fn,rank_fn,generation_fn,
 
     def retrieve(s):
         if s['status']!='running':return s
+        # max_queries=3 마다 candidate_k 만큼 가져와라.
         data=search_multiple(s['queries'],search_fn,category=s['category'],
                              role=s['trusted_role'],candidate_k=s['candidate_k'],max_queries=3)
         s['candidates']=data['documents']
@@ -105,6 +117,8 @@ def create_rag_pipeline(rewrite_fn,search_fn,rank_fn,generation_fn,
                 'timing_ms':s.get('timing_ms',{}),'source_mode':s['source_mode']}
 
     # LCEL의 | 연결은 실행 순서만 준비합니다. invoke 호출에서 실제 Stage를 실행합니다.
+    # run('rewrite', rewrite): rewrite 를 감싼 RunnableLambda 를 만드는 호출
+    # wrapped(state)가 실제 실행 시 rewrite(state)를 호출하고, 처리 시간을 기록하고, 오류 단계에 이름을 붙임. 'rewrite'는 그 기록에 쓰는 이름
     chain=(RunnableLambda(start)
            |run('rewrite',rewrite)
            |run('multiquery',queries)

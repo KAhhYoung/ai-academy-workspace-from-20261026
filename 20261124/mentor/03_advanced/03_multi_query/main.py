@@ -22,6 +22,9 @@ from services.quality import check_query_list
 
 from services.quality import audit_candidate_merge
 
+'''
+    이번 실습 목적: 멀티쿼리 생성
+'''
 def main():
     parser=argparse.ArgumentParser(description='Day27 실습 03 · 03_multi_query')
     parser.add_argument('--offline',action='store_true',help='교육용 고정 데이터·점수. 모델 품질 실측이 아닙니다.')

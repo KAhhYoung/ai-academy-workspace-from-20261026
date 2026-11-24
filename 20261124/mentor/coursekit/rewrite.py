@@ -25,8 +25,19 @@ def make_rewrite_chain(model=None):
 def rewrite_query(original_question,history,*,offline=False,chain=None):
     if not original_question.strip():raise ValueError('질문은 비어 있을 수 없습니다.')
     if offline:
+        '''
+            Q02, Q04: rewrite 성공하여 rewrite 된 질문 반환
+            추가 생성한 질문: history 가 없어 None 반환
+        '''
         search=rewrite_fixture(original_question,history)
         return RewriteResult(status='ready',search_query=search,reason='교육용 고정 Rewrite') if search else RewriteResult(status='clarification_required',search_query='',reason='대화에서 대상을 확인할 수 없습니다.')
+    '''
+        rewrite 하기 위해 chain 방식으로 LLM 호출 수행
+        -실습에서는 offline=False 인 경우에만 LLM 호출하여 rewrite 하고,
+         offline=True 인 경우에는 수동 rewrite 진행
+
+        원래대로면 history 가 없으므로 추가 생성한 질문에 대해서는 LLM 호출 막아야할 듯!?
+    '''
     chain=make_rewrite_chain() if chain is None else chain
     response=chain.invoke({'original_question':original_question,'history':str(history)})
     if not isinstance(response,RewriteResult):raise TypeError('LLM Structured Output 타입 불일치')

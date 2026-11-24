@@ -62,12 +62,22 @@ def make_live_search(model=None,connector=None):
     from coursekit.db import search_db
     model=load_encoder() if model is None else model
     connector=open_db if connector is None else connector
+    # 임베딩 설정(contract)
     contract=embedding_contract(model)
     def search(question,category='시설',k=5,role='learner'):
         vector=encode(model,question,'query: ')
         with connector() as conn:
+            # role 의 역할: SQL이 검색 후보의 접근 권한을 검사할 때 사용됨. AND (%s = 'staff' OR d.access_level = 'public') 에서 %s 에 바인딩됨
+            # - role='staff'이면 왼쪽 조건이 참이므로 공개 여부와 관계없이 이 조건을 통과해요.
+            # - 기본값인 role='learner'이면 왼쪽 조건이 거짓이므로 public 문서의 청크만 통과해요.
+            # 이 필터를 통과한 청크 중에서 코사인 거리가 가까운 순으로 최대 k개를 가져옵니다.
             rows=search_db(conn,vector,category,k,role,contract)
         from coursekit.documents import hit_to_document
+        # hit_to_document: DB 검색 결과 한 행을 LangChain의 Document 객체 하나로 바꾸는 함수
+        # 검색 결과 한 행은 청크 하나에 해당
+
+        # Document.page_context <- hit['body']
+        # Document.metadata <- 문서ID, 청크ID, 출처 위치, 코사인 거리 등
         return [hit_to_document(hit) for hit in rows]
     return search
 

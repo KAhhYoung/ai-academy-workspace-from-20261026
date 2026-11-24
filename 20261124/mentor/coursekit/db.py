@@ -84,6 +84,7 @@ def search_db(conn,vector,category,k,role,contract):
     validate_args(category,k,role)
     check_meta(conn,contract)
     schema=schema_name()
+    # c: 문서 청크 테이블 (rag_chunks), d: 문서 테이블 (rag_documents)
     q=sql.SQL('''SELECT c.citation_id,c.chunk_id,c.doc_id,c.source_version,c.source_locator,
         d.category,d.access_level,c.ready,c.is_current,c.title,c.body,
         c.embedding <=> %s AS cosine_distance

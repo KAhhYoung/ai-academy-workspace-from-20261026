@@ -9,5 +9,7 @@ def plan_queries(base, extras):
     # 3. 반환: 호출한 Stage가 사용할 값/상태를 반환합니다.
     # 4. 주의: 오류를 빈 결과로 숨기지 않고 출처·필터 계약을 유지합니다.
     from coursekit.multi_query import unique_queries
+    
+    # 멀티 쿼리 간 중복 제거
     return unique_queries(base,extras[:2],max_queries=3)
     # END D27-03-A01
