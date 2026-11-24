@@ -44,6 +44,7 @@ def run_02(offline,fns):
                {'id':'Q-ambiguous','question':'그거는 어떻게 해?','category':'시설','history':[]}]
     rows=[]
     for case in questions:
+        # 
         result=f1(case['question'],case['history'],offline)
         row=f2(case['question'],result)
         if len(more)>=1:row['semantic_guard']=more[0](case['question'],result)
