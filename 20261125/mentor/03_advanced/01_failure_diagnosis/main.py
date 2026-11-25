@@ -20,6 +20,7 @@ from app.policies.audit import audit_decision
 
 def main():
     parser=argparse.ArgumentParser(description="Day28 RAG Evaluation 실습")
+    # add_mutually_exclusive_group: argparse에서 동시에 사용할 수 없는 명령줄 옵션을 한 그룹으로 묶음
     mode=parser.add_mutually_exclusive_group()
     mode.add_argument('--offline',action='store_true',help='고정 학습 데이터만 실행(기본값)')
     mode.add_argument('--live',action='store_true',help='실제 CUDA GPU/DB/LLM 연결. 06~08만 지원하며 API 비용 발생 가능')

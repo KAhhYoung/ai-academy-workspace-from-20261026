@@ -38,7 +38,7 @@ def target_inputs(example):
         raise ValueError('Target 입력 필수 필드 누락')
     return {key:example[key] for key in safe_keys}
 
-
+# 평가용 정답(gold)이 모델 입력에 섞여 들어가는지 검사하는 함수
 def assert_no_gold_leakage(request):
     found=FORBIDDEN_TARGET_KEYS.intersection(request)
     if found:raise ValueError('Gold Label/Reference Answer가 Target 입력에 포함됨: '+','.join(sorted(found)))

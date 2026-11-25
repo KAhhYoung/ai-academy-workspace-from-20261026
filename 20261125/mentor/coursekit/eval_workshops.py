@@ -39,6 +39,9 @@ def execute(number, hooks, *, live=False, level='01_basic'):
     elif number==2:
         corpus={c['chunk_id']:c for c in read_json('corpus.json')}
         rows=[]
+        '''
+            실습목적: 질문에 대한 청크, 청크에 대한 corpus 가 존재하는지 확인
+        '''
         for qid in ('Q01','Q05','Q06','Q07'):
             ids=hooks['select_gold'](qid,gold)
             ok=hooks['validate_gold_ids'](ids,corpus)
@@ -53,14 +56,25 @@ def execute(number, hooks, *, live=False, level='01_basic'):
         rows=[]
         values=[]
         for qid in ('Q01','Q07','Q06'):
+            # qid 에 대한 candidate_ids, ranked_ids, included_ids, llm응답, latency(rewrite 포함) 가져옴
             run=target_fixture(target_inputs(qby[qid]),'baseline')
+
+            # rerank 결과를 ids 에 저장
             ids=run['ranked_ids']; g=gold[qid]; k=3
+
+            # Candidate Recall 계산
             recall=hooks['calculate_recall'](ids,g,k)
+
+            # hit 계산 (상위 k개 안에 정답이 몇 개 있는가)
             hits=hooks['count_gold_hits'](ids,g,k)
+
             row={'question_id':qid,'ranked_ids':ids,'gold_count':len(g),
                  'hits_at_3':hits,'recall_at_3':recall}
             if 'precision_and_hit' in hooks:
                 row.update(hooks['precision_and_hit'](ids,g,k))
+
+            # precision@k 계산 (가져온 k개 중 얼마나 정확한가?) : hits/k
+            # hit@k 계산 (상위 k개 안에 정답이 하나라도 있는가?)
             rows.append(row);values.append(recall)
         result['metrics']=rows
         if 'summarize_valid_recall' in hooks:result['aggregation']=hooks['summarize_valid_recall'](values)

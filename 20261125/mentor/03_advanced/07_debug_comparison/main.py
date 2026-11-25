@@ -16,6 +16,7 @@ from coursekit.eval_report import write_json
 from app.experiments.comparison import score_delta, find_problem_stage
 from app.diagnostics.stages import compare_four_variants
 from app.policies.regression import regression_decision
+from script.report import write_eval_runs
 
 
 def main():
@@ -42,11 +43,13 @@ def main():
         raise
     output=Path(__file__).resolve().parent/'outputs'/'result.json'
     write_json(output,result)
+    report_output = write_eval_runs(result, output.parent / 'eval_runs.jsonl')
     # 학생이 코드로 만든 설명 보고서는 별도 Markdown 파일로 저장합니다.
     if isinstance(result.get('markdown_report'),str):
         (output.parent/'report.md').write_text(result['markdown_report'],encoding='utf-8')
     print('Day28 실습 7 · 03_advanced ·',result['mode'])
     print('출력:',output)
+    print('평가 기록:',report_output)
     return result
 
 if __name__=='__main__':
