@@ -130,6 +130,27 @@ def run_06(offline,fns):
     from coursekit.fixtures import get_question
     from coursekit.runtime import create_dependencies
     f1,f2,*more=fns
+    '''
+        case:
+        {
+            "id": "Q02",
+            "question": "그럼 취소는 어떻게 해?",
+            "category": "시설",
+            "history": [
+            {
+                "role": "user",
+                "content": "회의실 예약은 어떻게 하나요?"
+            },
+            {
+                "role": "assistant",
+                "content": "회의실 예약 시스템에서 신청합니다."
+            }
+            ],
+            "gold_chunk_ids": [
+            "FAC-102-C1"
+            ]
+        }
+    '''
     case=get_question('Q02')
     req=f1(case)
     dependencies=create_dependencies(offline)

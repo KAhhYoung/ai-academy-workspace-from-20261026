@@ -8,6 +8,13 @@ class RewriteResult(BaseModel):
     status: Literal['ready','clarification_required']
     search_query: str=Field(max_length=800)
     reason: str=Field(max_length=200)
+# RewriteResult가 Pydantic v2 모델이면 model_json_schema()의 required 목록을 보면 됩니다.
+#   schema = RewriteResult.model_json_schema()
+#   print(schema.get("required", []))
+# ['status', 'search_query', 'reason']이 나오면 세 필드 모두 필수입니다. 특정 필드만 확인할 수도 있습니다.
+#   print(RewriteResult.model_fields["search_query"].is_required())
+
+
 
 RULES=('당신은 검색 질문 Rewrite 구성요소입니다. 마지막 질문을 검색 가능한 독립 질문으로 바꾸세요. '
        'History에서 명확한 사실만 복원하고 조건·부정·날짜를 추측하지 마세요. '

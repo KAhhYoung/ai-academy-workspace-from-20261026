@@ -19,6 +19,8 @@ def create_dependencies(offline=False):
     from coursekit.llm import create_generation
     from coursekit.rewrite import make_rewrite_chain,rewrite_query
     from coursekit.reranking import live_scorer
+
+    # Document 반환
     search=make_live_search()
     rewrite_chain=make_rewrite_chain()
     generation=create_generation()
