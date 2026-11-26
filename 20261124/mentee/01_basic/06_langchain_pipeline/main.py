@@ -22,6 +22,7 @@ def prepare_pipeline_request(case):
     return {
         "origin_question": case["question"],
         "history": case["history"],
+        "category": case["category"],
     }
 
 
@@ -38,13 +39,24 @@ def wire_langchain_pipeline(dependencies, offline):
     # 반환값과 예외 조건은 README.md의 수행 기준을 따르세요.
     # LCEL로 Runnable 준비
     def build_rewrite():
-        return RunnableLambda(rewrite_fn)
+        return RunnablePassthrough(
+            rewrite_result = RunnableLambda(
+                lambda req: rewrite_fn(
+                    q=req["origin_question"],
+                    history=req["history"]
+                )
+            )
+        )
     
     def build_search():
-        return RunnableLambda(
-            lambda result: {
-                "query": result.search_query,
-                "documents": search_fn(result.search_query)
+        return RunnablePassthrough(
+            document = RunnableLambda(
+                lambda result: search_fn(
+                    question=result.rewrite_result.search_query,
+                    category=,
+                    k=,
+                    role=
+                )
             }
         )
 
@@ -62,7 +74,7 @@ def wire_langchain_pipeline(dependencies, offline):
         return (
             build_rewrite
             | build_search()
-            
+            | build_rerank
         )
     else:
         pass
