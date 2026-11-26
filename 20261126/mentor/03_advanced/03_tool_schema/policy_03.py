@@ -13,5 +13,6 @@ def enforce_explicit_schema(tool_obj) -> dict:
     # 검수 기준: report_id는 실제 DB의 양의 정수이며 task_id가 아닙니다.
     schema=tool_obj.args_schema.model_json_schema()
     if 'report_id' not in schema.get('required',[]):raise ValueError('report_id 필수 인수 누락')
+    print('tool_obj.args_schema.model_json_schema: ', schema)
     return {'name':tool_obj.name,'required':schema['required']}
 

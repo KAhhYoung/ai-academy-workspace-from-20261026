@@ -19,6 +19,7 @@ def main():
     serve=args.serve
     registered=tasks.register_status_tool()
     print('[Schema]',tasks.enforce_explicit_schema(registered))
+    # 내가 pgAdmin 에 접속하지 않았다고 해도 PostgreSQL 서버에 접속하는 것은 별개로 가능...!
     print('[실제 DB 조회]',registered.invoke({'report_id':63}))
 
 if __name__=='__main__':main()

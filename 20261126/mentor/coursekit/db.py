@@ -47,6 +47,7 @@ def preflight()->dict:
 
 
 def fetch_report_status(report_id: int)->dict:
+    # 보고서 ID로 보고서 한 건의 인덱싱 상태를 조회하고, 저장된 임베딩이 현재 보고서의 요약문과 지정된 모델에 맞는지 vector_fresh로 표시
     from sqlalchemy import text
     rid=report_id_from(report_id)
     with readonly_connection() as db:

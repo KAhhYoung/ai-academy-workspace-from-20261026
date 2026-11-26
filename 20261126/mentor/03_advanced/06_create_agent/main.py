@@ -17,9 +17,15 @@ def main():
         print('실제 연동은 --check 없이 실행해야 합니다.')
         return
     serve=args.serve
+
+    # 아래 줄은 추후 api 로 교체됨
     question=tasks.question_for_agent(63)
     agent=tasks.make_agent()
+
+    # 아래 줄은 추후 비지니스 로직으로 상세하게 작성됨
     result=agent.invoke({'messages':[{'role':'user','content':question}]},config={'recursion_limit':20})
+    print('agent 응답 타입: ', type(result))        # dict
+    print('agent 응답 결과 확인: ', result)          # output/agent_response.md
     print('[Tool Call]',tasks.summarize_tool_messages(result['messages']))
     print('[최종 메시지]',tasks.final_text(result['messages']))
 

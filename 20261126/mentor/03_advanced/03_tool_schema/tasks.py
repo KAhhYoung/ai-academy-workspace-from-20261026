@@ -17,6 +17,7 @@ def register_status_tool():
     from langchain.tools import tool
     import json
     from coursekit.db import fetch_report_status
+    # @tool을 적용해서 만들어진 도구 객체가 Runnable을 상속. 따라서 invoke 로 호출 가능
     @tool('lookup_status')
     def lookup_status(report_id:int)->str:
         """기존 보고서 report_id의 인덱싱 상태를 읽기 전용 조회합니다. task_id가 아닙니다."""

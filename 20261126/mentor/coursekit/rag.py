@@ -9,13 +9,16 @@ from coursekit.db import select_semantic_candidates
 from coursekit.gpu import encode_query,rerank
 
 
+# retrieve_reports 기능: 
 def retrieve_reports(query:str,category:str='ALL',candidate_k:int=8,context_k:int=3)->dict:
     query,category=search_request(query,category)
     if category!='ALL' and category not in settings().allowed_categories:
         raise PermissionError('서버에서 허용하지 않은 Category입니다. 사용자별 인증은 이 DB에 구현되어 있지 않습니다.')
     if not 1<=context_k<=candidate_k<=20:
         raise ValueError('1 <= context_k <= candidate_k <= 20 정책을 지키세요.')
+    # 쿼리 인코딩 수행
     vector=encode_query(query)
+    # 벡터유사도로 후보 조회
     rows=select_semantic_candidates(vector,category,candidate_k)
     if not rows:
         from coursekit.db import preflight
@@ -25,6 +28,7 @@ def retrieve_reports(query:str,category:str='ALL',candidate_k:int=8,context_k:in
         return {'question':query,'category':category,'candidate_ids':[],'ranked_ids':[],
                 'included_ids':[],'context':'','sources':[],'similarities':{}}
     kept=[{**r,'similarity':1-float(r['cosine_distance'])} for r in rows]
+    # rerank 수행
     kept=rerank(query,kept)  # CUDA CrossEncoder가 기본값입니다.
     included=[r for r in kept[:context_k] if r['similarity']>=settings().min_similarity]
     sources=[{'source_id':f"RPT-{r['report_id']}",
@@ -41,6 +45,7 @@ def retrieve_reports(query:str,category:str='ALL',candidate_k:int=8,context_k:in
 
 
 def rag_answer(query:str,category:str='ALL')->dict:
+    # record: rerank 까지 거친 후보 문서
     record=retrieve_reports(query,category)
     if not record['sources']:
         result={'status':'insufficient_context','answer':'제공된 보고서에서 확인 가능한 근거가 부족합니다.',
@@ -58,6 +63,8 @@ def rag_answer(query:str,category:str='ALL')->dict:
         ('human','질문:\n{question}\n\n검증된 보고서 Context:\n{context}')
     ])
     model=ChatOpenAI(model=settings().llm_model,timeout=45,max_retries=1)
+
+    # 체인 구성
     answer=(prompt|model|StrOutputParser()).invoke({'question':query,'context':record['context']})
     result={'status':'answered','answer':answer,'sources':record['sources'],
             'retrieval':{k:record[k] for k in ('candidate_ids','ranked_ids','included_ids')}}

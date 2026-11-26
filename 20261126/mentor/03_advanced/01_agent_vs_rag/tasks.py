@@ -18,10 +18,13 @@ def plan_for_request(question: str) -> dict:
     """처리 전략과 사용할 Tool 목록을 반환. 조건문은 Agent 자체가 아닙니다."""
     # 해설 D29-01-A-02: 업무 질문에서 문서 근거 조회와 구조화 상태 조회를 구분합니다.
     # 검수 기준: 규칙 기반 라우팅을 LLM Agent의 자율 선택과 혼동하지 않습니다.
+    # 'RAG 근거 보고서를 찾아 보고서 63번 상태도 알려줘' -> mode = 'rag'
     mode=classify_request(question)
     tools={'rag':['rag_search'],'db':['lookup_status'],'agent':['rag_search','lookup_status']}[mode]
     return {'strategy':mode,'tools':tools,'decision':'고정 조건에 따른 실습용 계획; 실제 Agent 선택은 06에서 LLM 수행'}
 
 
 # 추가 구현: 같은 프로젝트의 별도 책임 모듈
+# 설계철학이 담긴: policy_01.py 의 함수를 호출할 땐 task.py 을 통해 
+# 책임분리원칙(solid): task 가 policy 를 꼬리표처럼 달고 다니도록 엮는 
 from policy_01 import needs_two_sources, validate_plan

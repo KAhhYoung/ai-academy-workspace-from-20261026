@@ -20,6 +20,7 @@ def main():
     from coursekit.db import fetch_report_status
     rid=tasks.parse_report_id('63')
     raw=fetch_report_status(rid)
+    # status_view: status = 'ok' 와 아닌 상태를 구분하여 반환값을 구성하기 위함
     print('[DB]',tasks.status_view(raw))
     print('[Category policy]',tasks.enforce_read_policy(raw,{'RESEARCH_PLAN'}))
 

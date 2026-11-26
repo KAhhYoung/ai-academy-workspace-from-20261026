@@ -20,6 +20,7 @@ def main():
     from coursekit.db import preflight,fetch_report_status
     print('[기존 DB]',preflight())
     p=tasks.plan_for_request('RAG 근거 보고서를 찾아 보고서 63번 상태도 알려줘')
+    # 특정 보고서의 인덱싱 상태를 조회하고, 저장된 임베딩 벡터가 현재 보고서와 모델 기준으로 최신인지 vector_fresh로 표시
     print('[실제 상태]',fetch_report_status(63))
     print('[검증된 계획]',tasks.validate_plan(p))
 
