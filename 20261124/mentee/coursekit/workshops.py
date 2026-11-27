@@ -155,9 +155,21 @@ def run_06(offline,fns):
     req=f1(case)
     dependencies=create_dependencies(offline)
     chain=f2(dependencies,offline)
-    result=chain.invoke(req)
-    row={'status':result['status'],'result':result['result'],
-         'sources':result['sources'],'trace':result['trace']}
+    result=chain.invoke(req)                            # type(result): dict
+
+    import ast
+    answer = ast.literal_eval(result['generation']['raw'].content)    # type(result['raw']): AIMessage          
+    
+    # 기존 row 계약 주석처리하고, chain 연결을 최우선으로 하는 row 계약으로 일단 수정함
+    #row={'status':result['status'],'result':result['result'],
+    #     'sources':result['sources'],'trace':result['trace']}
+    row={'status': answer['status'],
+         'original_question': result['origin_question'],
+         'rewrite_question': result['rewrite_result'].search_query,
+         'answer': answer['answer'],
+         'source_ids': answer['source_ids']
+    }
+
     if len(more)>=1:row['trace_check']=more[0](result)
     if len(more)>=2:row['audit']=more[1](result)
     return {'execution_mode':'offline_fixture' if offline else 'live_e5_cuda_postgresql_llm',
