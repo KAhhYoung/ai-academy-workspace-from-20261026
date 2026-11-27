@@ -38,6 +38,7 @@ def create_app(runtime_factory=None):
     @app.exception_handler(Exception)
     async def unknown(request,exc):
         return JSONResponse(status_code=500,content=ServiceError('TOOL_CONTRACT_ERROR','internal_error').envelope())
+    
     @app.get('/health')
     def health():
         return get_runtime().health()
@@ -47,3 +48,5 @@ app=create_app()
 if __name__=='__main__':
     import uvicorn
     uvicorn.run(app,host='127.0.0.1',port=8000,access_log=False)
+
+# 01_basic 위치에서 python -m app.main 으로 실행해야 함
